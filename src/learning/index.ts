@@ -1,3 +1,4 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import type { Proposal, Regime } from "../types.js";
 
 // THE LEARNING LOOP (the differentiator). The brain proposes with a conviction;
@@ -46,4 +47,20 @@ export function applyWeights(p: Proposal, w: ConfidenceWeights): Proposal {
 function clamp(n: number, lo: number, hi: number): number {
   if (Number.isNaN(n)) return lo;
   return Math.max(lo, Math.min(hi, n));
+}
+
+// Persistence — weights survive restarts so learning compounds across the week.
+const WEIGHTS_PATH = "weights.json";
+
+export function loadWeights(): ConfidenceWeights {
+  if (!existsSync(WEIGHTS_PATH)) return initialWeights();
+  try {
+    return JSON.parse(readFileSync(WEIGHTS_PATH, "utf8")) as ConfidenceWeights;
+  } catch {
+    return initialWeights(); // corrupt file → start neutral, never crash
+  }
+}
+
+export function saveWeights(w: ConfidenceWeights): void {
+  writeFileSync(WEIGHTS_PATH, JSON.stringify(w, null, 2));
 }

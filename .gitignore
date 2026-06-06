@@ -5,6 +5,7 @@ dist/
 !.env.example
 *.log
 ledger.jsonl
+weights.json
 .DS_Store
 .wallet/
 *.key

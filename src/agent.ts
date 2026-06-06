@@ -5,6 +5,7 @@ import { evaluate } from "./kernel/index.js";
 import { executeSwap } from "./exec/index.js";
 import { append } from "./ledger/index.js";
 import { emptyPortfolio } from "./portfolio/index.js";
+import { applyWeights, loadWeights } from "./learning/index.js";
 import type { LedgerEntry } from "./types.js";
 
 // THE TRACER BULLET (Phase 1): the thinnest end-to-end pipe, proving the layers
@@ -22,8 +23,12 @@ async function runOnce(asset: string): Promise<void> {
   const bundle = await fetchSignalBundle(asset);
 
   console.log(`[2/5] brain    → proposing (LLM)`);
-  const proposal = await propose(bundle);
-  console.log(`        regime=${proposal.regime} dir=${proposal.direction} conv=${proposal.conviction}`);
+  const weights = loadWeights(); // learned from past outcomes; compounds across restarts
+  const raw = await propose(bundle);
+  const proposal = applyWeights(raw, weights); // past performance scales conviction
+  console.log(
+    `        regime=${proposal.regime} dir=${proposal.direction} conv=${raw.conviction}→${proposal.conviction.toFixed(2)} (learned)`,
+  );
 
   console.log(`[3/5] kernel   → evaluating against constitution`);
   const decision = evaluate(proposal, portfolio, constitution);
