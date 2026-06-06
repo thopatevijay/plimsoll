@@ -1,21 +1,53 @@
+import { config } from "../config.js";
+import { mapFearGreed, mapQuotePrice } from "./cmc.js";
 import type { SignalBundle } from "../types.js";
 
-// DATA / EDGE LAYER — Phase 2 fills this in:
-//  - CMC families via MCP: get_crypto_quotes_latest, get_crypto_technical_analysis,
-//    get_global_crypto_derivatives_metrics (funding), get_global_metrics_latest (F&G)
-//  - chain-native via CMC DEX API: /v4/dex/pairs (imbalance), /v1/dex/tokens/transactions
-//    (live trades), /v1/dex/security/detail (honeypot guard — run before any buy)
-//  - pay ≥1 source per-call via x402 (twak x402 primary; @x402/axios fallback, USDC/Base)
+// DATA / EDGE LAYER. Live fetch from the CoinMarketCap REST API (free Basic key).
+// Each source is fetched independently and tolerates failure — the free tier may
+// not expose every endpoint, and a 24/7 agent must degrade gracefully (a missing
+// field just means the regime detector falls back to its neutral default).
 //
-// TRACER BULLET: returns a hollow-but-typed bundle so the full pipe can flow
-// without network. Real fetchers replace this; the SignalBundle contract stays.
+// Phase 2 (still pending the spike): funding/derivatives + technicals (RSI/MACD)
+// via the CMC MCP tools, chain-native signals via the DEX API, and paying ≥1
+// source per-call via `twak x402` (R1). Confirmed REST endpoints are wired now.
+
+async function cmcGet(path: string, params: Record<string, string>): Promise<unknown> {
+  const url = new URL(config.cmc.restBase + path);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  const res = await fetch(url, {
+    headers: { "X-CMC_PRO_API_KEY": config.cmc.apiKey, Accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`CMC ${path} → HTTP ${res.status}`);
+  return res.json();
+}
+
 export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
-  // TODO(P2): real CMC + chain fetch; set paidViaX402 when fetched via x402.
-  return {
+  const bundle: SignalBundle = {
     timestamp: new Date().toISOString(),
     asset,
-    cmc: { priceUsd: 0, fearGreed: 50, fundingRate: 0, rsi: 50, macd: 0 },
-    chain: { dexImbalance: 0, liquidityShift: 0, walletFlow: 0, isHoneypot: false },
+    cmc: {},
+    chain: {},
     paidViaX402: false,
   };
+
+  if (!config.cmc.apiKey) return bundle; // keyless → hollow bundle; rule engine still runs
+
+  const [price, fearGreed] = await Promise.all([
+    cmcGet("/v2/cryptocurrency/quotes/latest", { symbol: asset })
+      .then((r) => mapQuotePrice(r, asset))
+      .catch((e) => {
+        console.warn(`  ⚠️  quotes/latest failed: ${(e as Error).message}`);
+        return undefined;
+      }),
+    cmcGet("/v3/fear-and-greed/latest", {})
+      .then(mapFearGreed)
+      .catch((e) => {
+        console.warn(`  ⚠️  fear-and-greed failed (may need a higher tier): ${(e as Error).message}`);
+        return undefined;
+      }),
+  ]);
+
+  bundle.cmc.priceUsd = price;
+  bundle.cmc.fearGreed = fearGreed;
+  return bundle;
 }
