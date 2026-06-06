@@ -2,6 +2,7 @@ import OpenAI from "openai";
 import { z } from "zod";
 import { config } from "../config.js";
 import { detectRegime } from "../regime/index.js";
+import { ruleProposer } from "./rules.js";
 import { summarize } from "../signals/features.js";
 import type { Proposal, SignalBundle } from "../types.js";
 
@@ -59,15 +60,9 @@ export async function propose(bundle: SignalBundle): Promise<Proposal> {
   const detectedRegime = detectRegime(bundle);
 
   if (!config.llm.apiKey) {
-    // TRACER BULLET: deterministic stub so the pipe runs keyless. Uses the real
-    // detected regime; holds (no live trading) until a key is set.
-    return {
-      regime: detectedRegime,
-      asset: bundle.asset,
-      direction: "hold",
-      conviction: 0.1,
-      thesis: "[stub] no LLM key set; holding. Detected regime + features wired.",
-    };
+    // No LLM key → fall back to the deterministic rule proposer so the full
+    // pipeline (and the learning loop) still runs and makes real decisions.
+    return ruleProposer(bundle);
   }
 
   const client = new OpenAI({ apiKey: config.llm.apiKey });
