@@ -7,6 +7,7 @@ import { append } from "./ledger/index.js";
 import { detectRegime } from "./regime/index.js";
 import { emptyPortfolio } from "./portfolio/index.js";
 import { loadPortfolioFromChain } from "./ops/state.js";
+import { recordDailyTrade } from "./ops/daily.js";
 import { alert } from "./ops/heartbeat.js";
 import {
   computeOutcome,
@@ -109,6 +110,7 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
     try {
       entry.exec = await executeSwap(decision.order);
       console.log(`        ${entry.exec.txHash}`);
+      recordDailyTrade(decision.order.sizeUsd); // feed the kernel's daily-volume cap
       // Record the decision to be graded after the hold horizon (drives learning).
       if (currentPrice !== undefined && currentPrice > 0) {
         const open = loadPositions();

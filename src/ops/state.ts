@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { spawnTwak } from "../exec/index.js";
 import { atomicWriteJson } from "../util/io.js";
+import { loadDailyCounters } from "./daily.js";
 import type { PortfolioState } from "../types.js";
 
 // Restart-state recovery (Phase 5). A 24/7 agent must rebuild its state from the
@@ -52,7 +53,8 @@ export async function loadPortfolioFromChain(): Promise<PortfolioState> {
   const goodRead = Number.isFinite(equityUsd) && equityUsd > 0;
   const peakEquityUsd = goodRead ? Math.max(persistedPeak, equityUsd) : persistedPeak;
   if (goodRead) savePeak(peakEquityUsd);
-  // Daily counters reset on boot; the daily-qualifier (twak automate) guarantees
-  // the trade minimum independently, so a mid-day restart can't cause a DQ there.
-  return { equityUsd, peakEquityUsd, positions, tradesToday: 0, tradeVolumeTodayUsd: 0 };
+  // Daily counters are PERSISTED (rollover-aware), so the kernel's daily-volume
+  // cap accumulates across cycles and survives restarts within the same UTC day.
+  const daily = loadDailyCounters();
+  return { equityUsd, peakEquityUsd, positions, ...daily };
 }
