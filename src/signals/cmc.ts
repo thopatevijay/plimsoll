@@ -20,6 +20,16 @@ export function mapFearGreed(raw: any): number | undefined {
   return typeof v === "number" ? v : undefined;
 }
 
+/** /v2/cryptocurrency/ohlcv/historical → ascending close-price series. */
+export function mapOhlcvCloses(raw: any, symbol: string): number[] {
+  const entry = raw?.data?.[symbol] ?? raw?.data;
+  const quotes = entry?.quotes;
+  if (!Array.isArray(quotes)) return [];
+  return quotes
+    .map((q: any) => q?.quote?.USD?.close)
+    .filter((c: any): c is number => typeof c === "number");
+}
+
 /** /v1/dex/security/detail → treat anything flagged as a honeypot/high-risk as unsafe. */
 export function mapIsHoneypot(raw: any): boolean {
   const d = raw?.data;

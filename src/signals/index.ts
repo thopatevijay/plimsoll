@@ -1,5 +1,6 @@
 import { config } from "../config.js";
-import { mapFearGreed, mapQuotePrice } from "./cmc.js";
+import { mapFearGreed, mapOhlcvCloses, mapQuotePrice } from "./cmc.js";
+import { macd, rsi } from "./indicators.js";
 import type { SignalBundle } from "../types.js";
 
 // DATA / EDGE LAYER. Live fetch from the CoinMarketCap REST API (free Basic key).
@@ -32,7 +33,7 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
 
   if (!config.cmc.apiKey) return bundle; // keyless → hollow bundle; rule engine still runs
 
-  const [price, fearGreed] = await Promise.all([
+  const [price, fearGreed, closes] = await Promise.all([
     cmcGet("/v2/cryptocurrency/quotes/latest", { symbol: asset })
       .then((r) => mapQuotePrice(r, asset))
       .catch((e) => {
@@ -45,9 +46,19 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
         console.warn(`  ⚠️  fear-and-greed failed (may need a higher tier): ${(e as Error).message}`);
         return undefined;
       }),
+    cmcGet("/v2/cryptocurrency/ohlcv/historical", { symbol: asset, count: "60", interval: "daily" })
+      .then((r) => mapOhlcvCloses(r, asset))
+      .catch((e) => {
+        console.warn(`  ⚠️  ohlcv/historical failed (may need a higher tier): ${(e as Error).message}`);
+        return [] as number[];
+      }),
   ]);
 
   bundle.cmc.priceUsd = price;
   bundle.cmc.fearGreed = fearGreed;
+  if (closes.length) {
+    bundle.cmc.rsi = rsi(closes);
+    bundle.cmc.macd = macd(closes)?.macd;
+  }
   return bundle;
 }

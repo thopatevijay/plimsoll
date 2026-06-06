@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapFearGreed, mapIsHoneypot, mapQuotePrice } from "../src/signals/cmc.js";
+import { mapFearGreed, mapIsHoneypot, mapOhlcvCloses, mapQuotePrice } from "../src/signals/cmc.js";
 
 describe("CMC response mappers", () => {
   it("reads price from the array-form quotes/latest shape", () => {
@@ -20,6 +20,18 @@ describe("CMC response mappers", () => {
   it("reads the Fear & Greed value", () => {
     expect(mapFearGreed({ data: { value: 72 } })).toBe(72);
     expect(mapFearGreed({})).toBeUndefined();
+  });
+
+  it("extracts the ascending close series from ohlcv/historical", () => {
+    const raw = {
+      data: { CAKE: { quotes: [
+        { quote: { USD: { close: 2.1 } } },
+        { quote: { USD: { close: 2.3 } } },
+        { quote: { USD: { close: 2.2 } } },
+      ] } },
+    };
+    expect(mapOhlcvCloses(raw, "CAKE")).toEqual([2.1, 2.3, 2.2]);
+    expect(mapOhlcvCloses({}, "CAKE")).toEqual([]);
   });
 
   it("flags honeypots from the security/detail shape", () => {
