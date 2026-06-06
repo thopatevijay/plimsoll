@@ -1,7 +1,7 @@
 import { config } from "../config.js";
 import { spawnTwak } from "../exec/index.js";
 import { buildX402Args } from "../exec/twak.js";
-import { mapQuotePrice } from "./cmc.js";
+import { mapX402QuotePrice } from "./cmc.js";
 
 // Pay-per-call data via twak x402 (R1). Used in LIVE mode so the agent funds its
 // own market data — the rubric's "native x402 usage as part of the trade loop,
@@ -18,14 +18,9 @@ const USDC_BSC = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 export async function fetchX402Price(symbol: string): Promise<number | undefined> {
   const url = `${config.cmc.x402Base}/v3/cryptocurrency/quotes/latest?symbol=${encodeURIComponent(symbol)}`;
   const args = buildX402Args(url, MAX_PAYMENT_ATOMIC, { preferAsset: USDC_BSC, autoApprove: true });
+  // Confirmed live: `twak x402 request --json` returns the CMC response directly
+  // ({ data: Coin[], status }). mapX402QuotePrice handles the array shape + picks
+  // the canonical coin by rank (guards against meme-symbol impostors).
   const res = await spawnTwak(args);
-
-  // twak returns the x402 endpoint's response body (CMC quotes JSON), possibly
-  // wrapped. Try the known shapes defensively — confirm the exact wrapper on the
-  // first live run (the manual `twak x402 request … --json` test) and tighten.
-  for (const candidate of [res, res?.body, res?.data, res?.response, res?.result]) {
-    const price = mapQuotePrice(candidate, symbol);
-    if (price !== undefined) return price;
-  }
-  return undefined;
+  return mapX402QuotePrice(res, symbol);
 }

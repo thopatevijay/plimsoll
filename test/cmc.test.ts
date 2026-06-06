@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapFearGreed, mapIsHoneypot, mapOhlcvCloses, mapQuotePrice } from "../src/signals/cmc.js";
+import { mapFearGreed, mapIsHoneypot, mapOhlcvCloses, mapQuotePrice, mapX402QuotePrice } from "../src/signals/cmc.js";
 
 describe("CMC response mappers", () => {
   it("reads price from the array-form quotes/latest shape", () => {
@@ -15,6 +15,21 @@ describe("CMC response mappers", () => {
   it("returns undefined when the symbol/price is missing", () => {
     expect(mapQuotePrice({ data: {} }, "CAKE")).toBeUndefined();
     expect(mapQuotePrice({}, "CAKE")).toBeUndefined();
+  });
+
+  it("picks the canonical coin by rank from the x402 array shape (impostor-safe)", () => {
+    // Real shape: data is an array; multiple coins share symbol BNB.
+    const res = {
+      data: [
+        { symbol: "BNB", is_active: 1, cmc_rank: 4, quote: [{ symbol: "USD", price: 573.72 }] },
+        { symbol: "BNB", is_active: 1, cmc_rank: 7634, quote: [{ symbol: "USD", price: 0.0000225 }] }, // meme impostor
+        { symbol: "BNB", is_active: 0, cmc_rank: null, quote: [{ symbol: "USD", price: null }] },
+      ],
+      status: { error_code: "0" },
+    };
+    expect(mapX402QuotePrice(res, "BNB")).toBe(573.72);
+    expect(mapX402QuotePrice({ data: [] }, "BNB")).toBeUndefined();
+    expect(mapX402QuotePrice({}, "BNB")).toBeUndefined();
   });
 
   it("reads the Fear & Greed value", () => {

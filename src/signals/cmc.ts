@@ -14,6 +14,30 @@ export function mapQuotePrice(raw: any, symbol: string): number | undefined {
   return typeof price === "number" ? price : undefined;
 }
 
+/** x402 /x402/v3/cryptocurrency/quotes/latest → { data: Coin[], status }.
+ *  Unlike the keyed REST quote, data is an ARRAY and quote is an ARRAY, and
+ *  multiple coins can share a symbol (meme impostors). Pick the active coin with
+ *  the best (lowest) cmc_rank, then its USD quote — never blindly take [0]. */
+export function mapX402QuotePrice(res: any, symbol: string): number | undefined {
+  const arr = res?.data;
+  if (!Array.isArray(arr)) return undefined;
+  const sym = symbol.toUpperCase();
+  const matches = arr.filter((c: any) => String(c?.symbol).toUpperCase() === sym && c?.is_active === 1);
+  const pool = matches.length ? matches : arr;
+  let best: any;
+  let bestRank = Number.POSITIVE_INFINITY;
+  for (const c of pool) {
+    const rank = typeof c?.cmc_rank === "number" ? c.cmc_rank : Number.POSITIVE_INFINITY;
+    if (rank < bestRank) {
+      bestRank = rank;
+      best = c;
+    }
+  }
+  const q = best?.quote;
+  const usd = Array.isArray(q) ? (q.find((x: any) => x?.symbol === "USD") ?? q[0]) : q?.USD;
+  return typeof usd?.price === "number" ? usd.price : undefined;
+}
+
 /** /v3/fear-and-greed/latest → data.value (0-100). */
 export function mapFearGreed(raw: any): number | undefined {
   const v = raw?.data?.value;
