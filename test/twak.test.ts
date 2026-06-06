@@ -39,6 +39,13 @@ describe("twak command builders (v0.17.0 verified)", () => {
     ]);
   });
 
+  it("pins the payment asset + auto-approves Permit2 when asked", () => {
+    const args = buildX402Args("https://x", "20000000000000000", { preferAsset: "USDC", autoApprove: true });
+    expect(args).toContain("--prefer-asset");
+    expect(args[args.indexOf("--prefer-asset") + 1]).toBe("USDC");
+    expect(args).toContain("--auto-approve");
+  });
+
   it("builds the on-chain competition registration", () => {
     expect(buildCompeteRegisterArgs()).toEqual(["compete", "register", "--json"]);
   });

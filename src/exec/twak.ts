@@ -43,9 +43,18 @@ export function swapTokensFor(
   return order.direction === "buy" ? { from: stable, to: assetId } : { from: assetId, to: stable };
 }
 
-/** `twak x402 request <url> --max-payment <atomic> --yes --json` (R1 — x402 via twak). */
-export function buildX402Args(url: string, maxPaymentAtomic: string): string[] {
-  return ["x402", "request", url, "--max-payment", maxPaymentAtomic, "--yes", "--json"];
+/** `twak x402 request <url> --max-payment <atomic> --yes --json` (R1 — x402 via twak).
+ *  preferAsset pins the payment token (e.g. "USDC"); autoApprove handles the
+ *  one-time Permit2 approval for non-gasless routes. */
+export function buildX402Args(
+  url: string,
+  maxPaymentAtomic: string,
+  opts?: { preferAsset?: string; autoApprove?: boolean },
+): string[] {
+  const args = ["x402", "request", url, "--max-payment", maxPaymentAtomic, "--yes", "--json"];
+  if (opts?.preferAsset) args.push("--prefer-asset", opts.preferAsset);
+  if (opts?.autoApprove) args.push("--auto-approve");
+  return args;
 }
 
 /** `twak compete register --json` (CLI-only; on-chain on BSC). */

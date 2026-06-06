@@ -1,6 +1,7 @@
 import { config } from "../config.js";
 import { mapFearGreed, mapQuotePrice } from "./cmc.js";
 import { fetchMcpSignals, type McpSignals } from "./mcp.js";
+import { fetchX402Price } from "./x402.js";
 import type { SignalBundle } from "../types.js";
 
 // DATA / EDGE LAYER. Price comes from the CMC REST API (free Basic key); funding
@@ -33,13 +34,7 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
 
   if (!config.cmc.apiKey) return bundle; // keyless → hollow bundle; rule engine still runs
 
-  const [price, restFearGreed, mcp] = await Promise.all([
-    cmcGet("/v2/cryptocurrency/quotes/latest", { symbol: asset })
-      .then((r) => mapQuotePrice(r, asset))
-      .catch((e) => {
-        console.warn(`  ⚠️  quotes/latest failed: ${(e as Error).message}`);
-        return undefined;
-      }),
+  const [restFearGreed, mcp] = await Promise.all([
     cmcGet("/v3/fear-and-greed/latest", {})
       .then(mapFearGreed)
       .catch(() => undefined), // REST F&G is just a fallback for MCP
@@ -48,6 +43,25 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
       return {};
     }),
   ]);
+
+  // Price: in LIVE mode the agent pays for it via x402 (R1 — funds its own data);
+  // otherwise (and as a fallback) the free REST quote.
+  let price: number | undefined;
+  if (config.mode === "live") {
+    price = await fetchX402Price(asset).catch((e) => {
+      console.warn(`  ⚠️  x402 price failed, falling back to REST: ${(e as Error).message}`);
+      return undefined;
+    });
+    if (price !== undefined) bundle.paidViaX402 = true;
+  }
+  if (price === undefined) {
+    price = await cmcGet("/v2/cryptocurrency/quotes/latest", { symbol: asset })
+      .then((r) => mapQuotePrice(r, asset))
+      .catch((e) => {
+        console.warn(`  ⚠️  quotes/latest failed: ${(e as Error).message}`);
+        return undefined;
+      });
+  }
 
   bundle.cmc.priceUsd = price;
   bundle.cmc.fearGreed = mcp.fearGreed ?? restFearGreed;
