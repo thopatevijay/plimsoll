@@ -1,3 +1,4 @@
+import { drawdownPct } from "../portfolio/index.js";
 import type {
   Constitution,
   KernelDecision,
@@ -27,17 +28,23 @@ export function evaluate(
   }
 
   // 3. Drawdown kill-switch — the hard floor. Trips well below the DQ line.
-  const drawdownPct =
-    portfolio.peakEquityUsd > 0
-      ? ((portfolio.peakEquityUsd - portfolio.equityUsd) / portfolio.peakEquityUsd) * 100
-      : 0;
-  if (drawdownPct >= c.risk.hardDrawdownPct) {
-    return { ok: false, reason: `drawdown ${drawdownPct.toFixed(1)}% >= kill-switch ${c.risk.hardDrawdownPct}%` };
+  const dd = drawdownPct(portfolio);
+  if (dd >= c.risk.hardDrawdownPct) {
+    return { ok: false, reason: `drawdown ${dd.toFixed(1)}% >= kill-switch ${c.risk.hardDrawdownPct}%` };
   }
 
-  // 4. Size by conviction, capped by the per-trade limit. (Phase 4: vol-targeting.)
+  // 4. Daily volume cap — limits churn (simulated tx costs penalize it) and
+  //    bounds how much the agent can move in a single day.
+  const dailyCapUsd = portfolio.equityUsd * (c.sizing.dailyMaxTradeVolumePctOfEquity / 100);
+  const dailyRemainingUsd = dailyCapUsd - portfolio.tradeVolumeTodayUsd;
+  if (dailyRemainingUsd <= 0) {
+    return { ok: false, reason: `daily volume cap reached (${c.sizing.dailyMaxTradeVolumePctOfEquity}% of equity)` };
+  }
+
+  // 5. Size by conviction, capped by BOTH the per-trade limit and the daily
+  //    remaining budget. (Phase 4: vol-targeting replaces flat per-trade cap.)
   const perTradeCapUsd = portfolio.equityUsd * (c.sizing.perTradeMaxPctOfEquity / 100);
-  const sizeUsd = Math.min(perTradeCapUsd, perTradeCapUsd * clamp01(proposal.conviction));
+  const sizeUsd = Math.min(perTradeCapUsd * clamp01(proposal.conviction), perTradeCapUsd, dailyRemainingUsd);
   if (sizeUsd <= 0) return { ok: false, reason: "computed size <= 0" };
 
   return {

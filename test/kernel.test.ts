@@ -48,4 +48,20 @@ describe("risk kernel", () => {
     const d = evaluate({ ...buy("CAKE"), direction: "hold" }, healthy, C);
     expect(d.ok).toBe(false);
   });
+
+  it("rejects once the daily volume cap is reached", () => {
+    // dailyMax 40% of $1000 = $400 already traded today
+    const maxedOut: PortfolioState = { ...healthy, tradeVolumeTodayUsd: 400 };
+    const d = evaluate(buy("CAKE"), maxedOut, C);
+    expect(d.ok).toBe(false);
+    if (!d.ok) expect(d.reason).toMatch(/daily volume cap/);
+  });
+
+  it("clamps size to the remaining daily budget", () => {
+    // $360 used of the $400 daily cap → only $40 left, below the $150 per-trade cap
+    const nearCap: PortfolioState = { ...healthy, tradeVolumeTodayUsd: 360 };
+    const d = evaluate(buy("CAKE", 1.0), nearCap, C);
+    expect(d.ok).toBe(true);
+    if (d.ok) expect(d.order.sizeUsd).toBeCloseTo(40);
+  });
 });
