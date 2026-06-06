@@ -6,6 +6,7 @@ import { executeSwap } from "./exec/index.js";
 import { append } from "./ledger/index.js";
 import { emptyPortfolio } from "./portfolio/index.js";
 import { loadPortfolioFromChain } from "./ops/state.js";
+import { alert } from "./ops/heartbeat.js";
 import { applyWeights, loadWeights } from "./learning/index.js";
 import type { LedgerEntry, PortfolioState } from "./types.js";
 
@@ -14,7 +15,7 @@ import type { LedgerEntry, PortfolioState } from "./types.js";
 // today; we thicken them one at a time (Phases 2-4), re-running this loop after
 // each to confirm the pipe still flows. Build the skeleton, prove it, then fill.
 
-async function runOnce(asset: string): Promise<void> {
+async function runOnce(asset: string): Promise<LedgerEntry> {
   const constitution = loadConstitution();
 
   // Restart-state: rebuild equity/positions from chain on every boot (never local
@@ -61,17 +62,50 @@ async function runOnce(asset: string): Promise<void> {
 
   console.log(`[5/5] ledger   → appended`);
   append(entry);
-  console.log(`\n✅ tracer bullet complete — pipe flows end to end.`);
+  console.log(`\n✅ cycle complete — pipe flows end to end.`);
+  return entry;
 }
 
-// `npm run tracer`  or  `tsx src/agent.ts --once`
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+// The unattended live-week runner. One decision per interval over a watchlist;
+// every cycle is wrapped so a single failure never stops the loop, and trades /
+// errors / a periodic heartbeat are pushed to Telegram (no-op if unconfigured).
+// The USER launches this in live mode (`npm run dev`); it trades autonomously.
+async function runContinuous(): Promise<void> {
+  const watchlist = (process.env.SENTINEL_WATCHLIST ?? "CAKE,BNB,ETH")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const intervalMs = Number(process.env.SENTINEL_INTERVAL_MS ?? 300_000); // 5 min
+  await alert("info", `starting (mode=${config.mode}, ${watchlist.length} assets, ${Math.round(intervalMs / 1000)}s cadence)`);
+  let i = 0;
+  while (true) {
+    const asset = watchlist[i % watchlist.length] ?? "CAKE";
+    try {
+      const entry = await runOnce(asset);
+      if (entry.exec) await alert("info", `${config.mode}: ${entry.proposal.direction} ${asset} → ${entry.exec.txHash}`);
+    } catch (e) {
+      await alert("error", `cycle ${i} (${asset}) failed: ${(e as Error).message}`);
+    }
+    if (i % 12 === 0) await alert("info", `heartbeat — cycle ${i}, watching ${asset}`);
+    i++;
+    await sleep(intervalMs);
+  }
+}
+
+// `npm run tracer` (single cycle) or `npm run dev` (continuous live-week runner).
 const once = process.argv.includes("--once");
 if (once) {
-  runOnce("CAKE").catch((e) => {
-    console.error("tracer failed:", e);
+  runOnce("CAKE")
+    .then(() => process.exit(0))
+    .catch((e) => {
+      console.error("cycle failed:", e);
+      process.exit(1);
+    });
+} else {
+  runContinuous().catch((e) => {
+    console.error("runner failed:", e);
     process.exit(1);
   });
-} else {
-  // Phase 5: the continuous autonomous loop + qualifier cron live here.
-  console.log("Continuous mode not built yet. Run `npm run tracer` for the Phase 1 pipe.");
 }
