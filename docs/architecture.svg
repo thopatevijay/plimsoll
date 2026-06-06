@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 700" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>
+      .title   { font-size: 34px; font-weight: 800; fill: #0F172A; }
+      .subtitle{ font-size: 16px; font-weight: 500; fill: #475569; }
+      .step    { font-size: 16px; font-weight: 700; }
+      .sub     { font-size: 12.5px; fill: #475569; }
+      .badgenum{ font-size: 15px; font-weight: 800; fill: #FFFFFF; }
+      .ext     { font-size: 14.5px; font-weight: 700; }
+      .extsub  { font-size: 11.5px; fill: #475569; }
+      .flow    { font-size: 11.5px; font-weight: 600; fill: #64748B; }
+      .foot    { font-size: 15px; font-weight: 600; fill: #334155; }
+      .emoji   { font-size: 30px; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arrowL" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#E11D48"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="700" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="560" y="48" text-anchor="middle" class="title">SENTINEL</text>
+  <text x="560" y="78" text-anchor="middle" class="subtitle">An autonomous AI trader on BNB Chain — that stays inside the rules you set</text>
+
+  <!-- ===================== INPUTS (top) ===================== -->
+  <!-- CoinMarketCap -->
+  <rect x="40" y="110" width="175" height="72" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="2" filter="url(#shadow)"/>
+  <text x="127.5" y="142" text-anchor="middle" class="ext" fill="#1D4ED8">CoinMarketCap</text>
+  <text x="127.5" y="163" text-anchor="middle" class="extsub">live market &amp; on-chain data</text>
+
+  <!-- OpenAI -->
+  <rect x="256" y="110" width="175" height="72" rx="14" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2" filter="url(#shadow)"/>
+  <text x="343.5" y="142" text-anchor="middle" class="ext" fill="#6D28D9">OpenAI</text>
+  <text x="343.5" y="163" text-anchor="middle" class="extsub">the AI model (the “brain”)</text>
+
+  <!-- input arrows down -->
+  <line x1="127.5" y1="182" x2="127.5" y2="288" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="332" y1="182" x2="332" y2="288" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="150" y="240" class="flow">pays per call · x402</text>
+
+  <!-- ===================== FEEDBACK LOOP (top arc) ===================== -->
+  <path d="M 993.5 290 C 993.5 226, 360 226, 356 288" fill="none" stroke="#E11D48" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arrowL)"/>
+  <text x="675" y="219" text-anchor="middle" class="flow" fill="#E11D48" font-weight="700">↺ learns from every trade — improves the next decision</text>
+
+  <!-- ===================== PIPELINE (5 steps) ===================== -->
+  <!-- Step 1: SIGNALS -->
+  <rect x="40" y="290" width="175" height="175" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="64" cy="314" r="15" fill="#2563EB"/>
+  <text x="64" y="319" text-anchor="middle" class="badgenum">1</text>
+  <text x="127.5" y="356" text-anchor="middle" class="emoji">📊</text>
+  <text x="127.5" y="392" text-anchor="middle" class="step" fill="#1D4ED8">SIGNALS</text>
+  <text x="127.5" y="416" text-anchor="middle" class="sub">Reads the market</text>
+  <text x="127.5" y="433" text-anchor="middle" class="sub">&amp; the chain</text>
+  <text x="127.5" y="452" text-anchor="middle" class="sub" fill="#94A3B8">prices · trends · risk flags</text>
+
+  <!-- Step 2: BRAIN -->
+  <rect x="256" y="290" width="175" height="175" rx="16" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="280" cy="314" r="15" fill="#7C3AED"/>
+  <text x="280" y="319" text-anchor="middle" class="badgenum">2</text>
+  <text x="343.5" y="356" text-anchor="middle" class="emoji">🧠</text>
+  <text x="343.5" y="392" text-anchor="middle" class="step" fill="#6D28D9">BRAIN (AI)</text>
+  <text x="343.5" y="416" text-anchor="middle" class="sub">Decides what looks good</text>
+  <text x="343.5" y="436" text-anchor="middle" class="sub" fill="#6D28D9" font-weight="700">suggests only — never spends</text>
+
+  <!-- Step 3: RISK KERNEL -->
+  <rect x="473" y="290" width="175" height="175" rx="16" fill="#ECFDF5" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="497" cy="314" r="15" fill="#059669"/>
+  <text x="497" y="319" text-anchor="middle" class="badgenum">3</text>
+  <text x="560.5" y="356" text-anchor="middle" class="emoji">🛡️</text>
+  <text x="560.5" y="392" text-anchor="middle" class="step" fill="#047857">RISK KERNEL</text>
+  <text x="560.5" y="416" text-anchor="middle" class="sub">Checks your safety rules</text>
+  <text x="560.5" y="436" text-anchor="middle" class="sub" fill="#047857" font-weight="700">blocks anything out of bounds</text>
+
+  <!-- Step 4: EXECUTE -->
+  <rect x="689" y="290" width="175" height="175" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="713" cy="314" r="15" fill="#0891B2"/>
+  <text x="713" y="319" text-anchor="middle" class="badgenum">4</text>
+  <text x="776.5" y="356" text-anchor="middle" class="emoji">⚡</text>
+  <text x="776.5" y="392" text-anchor="middle" class="step" fill="#0E7490">EXECUTE</text>
+  <text x="776.5" y="416" text-anchor="middle" class="sub">Places the trade safely</text>
+  <text x="776.5" y="436" text-anchor="middle" class="sub" fill="#94A3B8">self-custodial signing</text>
+
+  <!-- Step 5: LEDGER -->
+  <rect x="906" y="290" width="175" height="175" rx="16" fill="#FFF1F2" stroke="#E11D48" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="930" cy="314" r="15" fill="#E11D48"/>
+  <text x="930" y="319" text-anchor="middle" class="badgenum">5</text>
+  <text x="993.5" y="356" text-anchor="middle" class="emoji">📒</text>
+  <text x="993.5" y="392" text-anchor="middle" class="step" fill="#BE123C">LEDGER</text>
+  <text x="993.5" y="416" text-anchor="middle" class="sub">Records &amp; learns</text>
+  <text x="993.5" y="436" text-anchor="middle" class="sub" fill="#94A3B8">grades the result</text>
+
+  <!-- pipeline arrows -->
+  <line x1="215" y1="377" x2="254" y2="377" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="431" y1="377" x2="471" y2="377" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="648" y1="377" x2="687" y2="377" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="864" y1="377" x2="904" y2="377" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- ===================== LOWER ROW ===================== -->
+  <!-- ERC-8004 identity (wide, left) -->
+  <rect x="40" y="515" width="391" height="88" rx="14" fill="#F1F5F9" stroke="#64748B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="235.5" y="548" text-anchor="middle" class="ext" fill="#334155">🔗 On-chain identity &amp; committed rule-book</text>
+  <text x="235.5" y="570" text-anchor="middle" class="extsub">ERC-8004 — the agent publishes the rules it promised to follow,</text>
+  <text x="235.5" y="587" text-anchor="middle" class="extsub">so anyone can verify it stayed within them</text>
+
+  <!-- Trust Wallet (under EXECUTE) -->
+  <rect x="689" y="515" width="175" height="88" rx="14" fill="#ECFEFF" stroke="#0891B2" stroke-width="2" filter="url(#shadow)"/>
+  <text x="776.5" y="546" text-anchor="middle" class="ext" fill="#0E7490">Trust Wallet</text>
+  <text x="776.5" y="565" text-anchor="middle" class="ext" fill="#0E7490">Agent Kit</text>
+  <text x="776.5" y="586" text-anchor="middle" class="extsub">keys never leave your machine</text>
+
+  <!-- BNB Smart Chain (under LEDGER column) -->
+  <rect x="906" y="515" width="175" height="88" rx="14" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="993.5" y="552" text-anchor="middle" class="ext" fill="#B45309">BNB Smart Chain</text>
+  <text x="993.5" y="575" text-anchor="middle" class="extsub">where the trade</text>
+  <text x="993.5" y="591" text-anchor="middle" class="extsub">actually happens</text>
+
+  <!-- exec -> trust wallet (down) -->
+  <line x1="776.5" y1="465" x2="776.5" y2="513" stroke="#0891B2" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <!-- trust wallet -> bnb chain (right) -->
+  <line x1="864" y1="559" x2="904" y2="559" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- ===================== FOOTER SUMMARY ===================== -->
+  <text x="560" y="660" text-anchor="middle" class="foot">The AI suggests · the rules decide · Trust Wallet signs · the agent learns</text>
+</svg>
