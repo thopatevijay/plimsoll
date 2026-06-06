@@ -4,7 +4,8 @@ import { propose } from "./brain/index.js";
 import { evaluate } from "./kernel/index.js";
 import { executeSwap } from "./exec/index.js";
 import { append } from "./ledger/index.js";
-import type { LedgerEntry, PortfolioState } from "./types.js";
+import { emptyPortfolio } from "./portfolio/index.js";
+import type { LedgerEntry } from "./types.js";
 
 // THE TRACER BULLET (Phase 1): the thinnest end-to-end pipe, proving the layers
 // compose — signal → brain → kernel → exec → ledger. Each layer is a hollow stub
@@ -15,12 +16,7 @@ async function runOnce(asset: string): Promise<void> {
   const constitution = loadConstitution();
 
   // Phase 5 reads this from chain on every boot (never local memory). Stub for now.
-  const portfolio: PortfolioState = {
-    equityUsd: 1000,
-    peakEquityUsd: 1000,
-    positions: {},
-    tradesToday: 0,
-  };
+  const portfolio = emptyPortfolio(1000);
 
   console.log(`\n[1/5] signals  → fetching bundle for ${asset}`);
   const bundle = await fetchSignalBundle(asset);

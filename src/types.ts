@@ -42,6 +42,7 @@ export interface PortfolioState {
   peakEquityUsd: number;
   positions: Record<string, number>; // symbol -> USD notional
   tradesToday: number;
+  tradeVolumeTodayUsd: number; // for the kernel's daily-volume cap
 }
 
 /** What the kernel emits a sized, bounded order or a logged rejection. */

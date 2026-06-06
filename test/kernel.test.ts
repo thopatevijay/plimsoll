@@ -14,7 +14,7 @@ const C: Constitution = {
   allowlist: { symbols: ["CAKE", "ETH"] },
 };
 
-const healthy: PortfolioState = { equityUsd: 1000, peakEquityUsd: 1000, positions: {}, tradesToday: 0 };
+const healthy: PortfolioState = { equityUsd: 1000, peakEquityUsd: 1000, positions: {}, tradesToday: 0, tradeVolumeTodayUsd: 0 };
 const buy = (asset: string, conviction = 1): Proposal => ({
   regime: "trending", asset, direction: "buy", conviction, thesis: "t",
 });
