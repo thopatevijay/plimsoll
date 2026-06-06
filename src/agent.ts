@@ -4,11 +4,22 @@ import { propose } from "./brain/index.js";
 import { evaluate } from "./kernel/index.js";
 import { executeSwap } from "./exec/index.js";
 import { append } from "./ledger/index.js";
+import { detectRegime } from "./regime/index.js";
 import { emptyPortfolio } from "./portfolio/index.js";
 import { loadPortfolioFromChain } from "./ops/state.js";
 import { alert } from "./ops/heartbeat.js";
-import { applyWeights, loadWeights } from "./learning/index.js";
+import {
+  computeOutcome,
+  loadPositions,
+  savePositions,
+  type OpenPosition,
+} from "./ops/positions.js";
+import { applyWeights, learnFromOutcome, loadWeights, saveWeights } from "./learning/index.js";
 import type { LedgerEntry, PortfolioState } from "./types.js";
+
+// How long a decision is held before we grade it (and learn). Configurable so a
+// demo can set it short (e.g. 60000) and watch the agent adapt quickly.
+const HOLD_MS = Number(process.env.SENTINEL_HOLD_MS ?? 3_600_000); // 1h default
 
 // THE TRACER BULLET (Phase 1): the thinnest end-to-end pipe, proving the layers
 // compose — signal → brain → kernel → exec → ledger. Each layer is a hollow stub
@@ -31,9 +42,38 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
 
   console.log(`\n[1/5] signals  → fetching bundle for ${asset}`);
   const bundle = await fetchSignalBundle(asset);
+  const currentRegime = detectRegime(bundle);
+  const currentPrice = bundle.cmc.priceUsd;
+
+  // Resolution pass: grade any matured decision on this asset and fold the result
+  // into the learned weights (the live outcome→learning loop). Runs in dry-run too.
+  let weights = loadWeights();
+  const now = Date.now();
+  const remaining: OpenPosition[] = [];
+  for (const pos of loadPositions()) {
+    if (pos.asset === asset && currentPrice !== undefined && now - pos.openedAt >= HOLD_MS) {
+      const outcome = computeOutcome(pos, currentPrice, currentRegime);
+      const { weights: updated, grade } = learnFromOutcome(weights, pos.regime, outcome);
+      weights = updated;
+      append({
+        ts: new Date().toISOString(),
+        bundle,
+        proposal: { regime: pos.regime, asset, direction: pos.direction, conviction: 0, thesis: pos.thesis },
+        decision: { ok: false, reason: "resolved" },
+        outcome,
+        selfGrade: grade,
+      });
+      console.log(
+        `[learn]  ${asset} ${pos.direction}: pnl $${outcome.pnlUsd.toFixed(2)}, thesis ${outcome.thesisHeld ? "held" : "broke"}, grade ${grade.toFixed(2)} → ${pos.regime} weight ${weights.byRegime[pos.regime].toFixed(2)}`,
+      );
+    } else {
+      remaining.push(pos);
+    }
+  }
+  savePositions(remaining);
+  saveWeights(weights);
 
   console.log(`[2/5] brain    → proposing (LLM)`);
-  const weights = loadWeights(); // learned from past outcomes; compounds across restarts
   const raw = await propose(bundle);
   const proposal = applyWeights(raw, weights); // past performance scales conviction
   console.log(
@@ -52,6 +92,22 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
     try {
       entry.exec = await executeSwap(decision.order);
       console.log(`        ${entry.exec.txHash}`);
+      // Record the decision to be graded after the hold horizon (drives learning).
+      if (currentPrice !== undefined) {
+        const open = loadPositions();
+        open.push({
+          id: entry.ts,
+          asset,
+          direction: decision.order.direction,
+          entryPrice: currentPrice,
+          sizeUsd: decision.order.sizeUsd,
+          regime: proposal.regime,
+          entryRegime: currentRegime,
+          thesis: proposal.thesis,
+          openedAt: now,
+        });
+        savePositions(open);
+      }
     } catch (e) {
       console.log(`        exec failed (non-fatal): ${(e as Error).message}`);
     }

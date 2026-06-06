@@ -11,3 +11,4 @@ weights.json
 *.key
 .dev-refs.md
 peak.json
+positions.json
