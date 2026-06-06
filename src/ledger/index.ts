@@ -8,6 +8,19 @@ import type { LedgerEntry } from "../types.js";
 
 const LEDGER_PATH = "ledger.jsonl";
 
+// Grade a resolved trade in [-1, 1]. This is what feeds the learning weights.
+// We separate "did we make money" from "was the thesis right" so the agent
+// learns from its *reasoning*, not just luck — a win on a broken thesis earns
+// far less credit than a win the thesis predicted.
+export function selfGrade(outcome: { pnlUsd: number; thesisHeld: boolean }): number {
+  if (outcome.pnlUsd === 0) return 0;
+  const win = outcome.pnlUsd > 0;
+  if (win && outcome.thesisHeld) return 1; // right, and for the right reason
+  if (win && !outcome.thesisHeld) return 0.3; // right, but lucky
+  if (!win && outcome.thesisHeld) return -0.3; // reasonable thesis, bad luck
+  return -1; // wrong, and the thesis broke
+}
+
 export function append(entry: LedgerEntry): void {
   appendFileSync(LEDGER_PATH, JSON.stringify(entry) + "\n");
 }
