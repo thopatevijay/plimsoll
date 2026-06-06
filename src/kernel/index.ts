@@ -19,6 +19,12 @@ export function evaluate(
   portfolio: PortfolioState,
   c: Constitution,
 ): KernelDecision {
+  // 0. Fail closed on a corrupt portfolio (NaN/<=0 equity from a bad chain read).
+  //    Otherwise NaN slips past every `>=` comparison and DEFEATS the kill-switch.
+  if (!Number.isFinite(portfolio.equityUsd) || portfolio.equityUsd <= 0 || !Number.isFinite(portfolio.peakEquityUsd)) {
+    return { ok: false, reason: "portfolio equity not finite/positive — refusing to trade" };
+  }
+
   // 1. Hold = no-op, trivially fine.
   if (proposal.direction === "hold") return { ok: false, reason: "proposal is hold" };
 

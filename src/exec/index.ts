@@ -39,9 +39,15 @@ export async function executeSwap(order: SizedOrder): Promise<ExecResult> {
   const r = await spawnTwak(args);
   if (r?.error) throw new Error(`twak swap: ${r.error}`);
 
+  const txHash = r?.txHash ?? r?.hash;
+  // Fail closed: in LIVE mode a missing tx hash is an AMBIGUOUS state, never a
+  // success — returning it as filled would corrupt ground truth / hide losses.
+  if (!quoteOnly && !txHash) {
+    throw new Error(`twak swap returned no tx hash (live, ambiguous): ${JSON.stringify(r).slice(0, 200)}`);
+  }
   return {
-    txHash: r?.txHash ?? r?.hash ?? (quoteOnly ? `DRY_RUN(out=${r?.output ?? "?"})` : "UNKNOWN"),
+    txHash: txHash ?? `DRY_RUN(out=${r?.output ?? "?"})`,
     filledAsset: order.asset,
-    filledUsd: order.sizeUsd,
+    filledUsd: order.sizeUsd, // requested size; equity is re-read from chain each cycle (see review note)
   };
 }

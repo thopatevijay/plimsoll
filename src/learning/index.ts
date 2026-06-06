@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { selfGrade } from "../ledger/index.js";
+import { atomicWriteJson } from "../util/io.js";
 import type { Proposal, Regime } from "../types.js";
 
 // THE LEARNING LOOP (the differentiator). The brain proposes with a conviction;
@@ -74,5 +75,5 @@ export function loadWeights(): ConfidenceWeights {
 }
 
 export function saveWeights(w: ConfidenceWeights): void {
-  writeFileSync(WEIGHTS_PATH, JSON.stringify(w, null, 2));
+  atomicWriteJson(WEIGHTS_PATH, w);
 }

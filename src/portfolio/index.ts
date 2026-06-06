@@ -18,7 +18,11 @@ export function emptyPortfolio(startEquityUsd: number): PortfolioState {
 /** Drawdown from the equity peak, as a percentage. The kernel's kill-switch and
  *  the DQ gate both read this — peak-to-trough is the metric that matters. */
 export function drawdownPct(state: PortfolioState): number {
-  if (state.peakEquityUsd <= 0) return 0;
+  // Fail closed: a non-finite or non-positive peak/equity (bad chain read, parse
+  // error) reports MAX drawdown so every reader treats it as "halt", never "fine".
+  if (!Number.isFinite(state.equityUsd) || !Number.isFinite(state.peakEquityUsd) || state.peakEquityUsd <= 0) {
+    return 100;
+  }
   return ((state.peakEquityUsd - state.equityUsd) / state.peakEquityUsd) * 100;
 }
 

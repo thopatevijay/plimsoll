@@ -36,8 +36,12 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
     portfolio = await loadPortfolioFromChain();
     console.log(`[0/5] state    → equity $${portfolio.equityUsd.toFixed(2)} from chain (peak $${portfolio.peakEquityUsd.toFixed(2)})`);
   } catch (e) {
-    portfolio = emptyPortfolio(1000);
-    console.log(`[0/5] state    → chain read failed, using $1000 stub: ${(e as Error).message}`);
+    // NEVER trade on fabricated equity in live mode — skip the cycle instead.
+    if (config.mode === "live") {
+      throw new Error(`live chain read failed — skipping cycle (won't trade blind): ${(e as Error).message}`);
+    }
+    portfolio = emptyPortfolio(1000); // dev/dry-run only
+    console.log(`[0/5] state    → chain read failed, using $1000 stub (dev): ${(e as Error).message}`);
   }
 
   console.log(`\n[1/5] signals  → fetching bundle for ${asset}`);

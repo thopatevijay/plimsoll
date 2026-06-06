@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { atomicWriteJson } from "../util/io.js";
 import type { Direction, Regime } from "../types.js";
 
 // Open-decision tracking for the learning loop. A trade's quality can only be
@@ -31,7 +32,7 @@ export function loadPositions(): OpenPosition[] {
 }
 
 export function savePositions(positions: OpenPosition[]): void {
-  writeFileSync(PATH, JSON.stringify(positions, null, 2));
+  atomicWriteJson(PATH, positions);
 }
 
 /** Pure: evaluate a decision at the resolution horizon. PnL from the price move

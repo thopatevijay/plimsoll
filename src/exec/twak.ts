@@ -10,6 +10,8 @@ import type { SizedOrder } from "../types.js";
 // resolves symbol→address (token registry) and passes the id here.
 
 /** `twak swap <from> <to> --usd <amt> --chain bsc --slippage <pct> [--quote-only]` */
+const HARD_MAX_SLIPPAGE_BPS = 300; // defense-in-depth cap for a LIVE swap
+
 export function buildSwapArgs(opts: {
   from: string;
   to: string;
@@ -18,6 +20,11 @@ export function buildSwapArgs(opts: {
   chain?: string;
   quoteOnly?: boolean;
 }): string[] {
+  // Validate at the boundary — a bad size must never reach a live swap.
+  if (!Number.isFinite(opts.usd) || opts.usd <= 0) {
+    throw new Error(`refusing swap: invalid usd size ${opts.usd}`);
+  }
+  const slippagePct = Math.min(Math.max(opts.slippageBps, 0), HARD_MAX_SLIPPAGE_BPS) / 100;
   const args = [
     "swap",
     opts.from,
@@ -27,7 +34,7 @@ export function buildSwapArgs(opts: {
     "--chain",
     opts.chain ?? "bsc",
     "--slippage",
-    String(opts.slippageBps / 100),
+    String(slippagePct),
     "--json",
   ];
   if (opts.quoteOnly) args.push("--quote-only");

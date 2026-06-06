@@ -18,9 +18,14 @@ describe("token registry", () => {
   });
 
   it("returns undefined when there is no BSC entry", () => {
-    expect(parseBscAddress([{ contract_address: [{ contract_address: "0xabc", platform: { name: "Ethereum" } }] }])).toBeUndefined();
+    expect(parseBscAddress([{ contract_address: [{ contract_address: "0x152649eA73beAb28c5b49B26eb48f7EAD6d4c898", platform: { name: "Ethereum" } }] }])).toBeUndefined();
     expect(parseBscAddress([{}])).toBeUndefined();
     expect(parseBscAddress(undefined)).toBeUndefined();
+  });
+
+  it("rejects a malformed BSC address (never swaps into junk)", () => {
+    expect(parseBscAddress([{ contract_address: [{ contract_address: "0xNOPE", platform: { name: "BNB Smart Chain (BEP20)" } }] }])).toBeUndefined();
+    expect(parseBscAddress([{ contract_address: [{ contract_address: "", platform: { name: "BNB Smart Chain (BEP20)" } }] }])).toBeUndefined();
   });
 
   it("picks the canonical id by rank from a colliding symbol (impostor-safe)", () => {
@@ -36,5 +41,10 @@ describe("token registry", () => {
     expect(mapCanonicalId(quotes, "BNB")).toBe(1839);
     expect(mapCanonicalId({ data: { BNB: [] } }, "BNB")).toBeUndefined();
     expect(mapCanonicalId({}, "BNB")).toBeUndefined();
+  });
+
+  it("fails closed when no active coin has a finite rank (can't disambiguate)", () => {
+    const quotes = { data: { FOO: [{ id: 1, symbol: "FOO", cmc_rank: null, is_active: 1 }] } };
+    expect(mapCanonicalId(quotes, "FOO")).toBeUndefined();
   });
 });

@@ -49,6 +49,13 @@ describe("risk kernel", () => {
     expect(d.ok).toBe(false);
   });
 
+  it("fails closed on NaN / non-positive equity (does not let NaN defeat the kill-switch)", () => {
+    const nan: PortfolioState = { ...healthy, equityUsd: Number.NaN };
+    expect(evaluate(buy("CAKE"), nan, C).ok).toBe(false);
+    const zero: PortfolioState = { ...healthy, equityUsd: 0 };
+    expect(evaluate(buy("CAKE"), zero, C).ok).toBe(false);
+  });
+
   it("rejects once the daily volume cap is reached", () => {
     // dailyMax 40% of $1000 = $400 already traded today
     const maxedOut: PortfolioState = { ...healthy, tradeVolumeTodayUsd: 400 };

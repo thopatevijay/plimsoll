@@ -22,11 +22,12 @@ export function mapCanonicalId(quotesRes: any, symbol: string): number | undefin
   const sym = symbol.toUpperCase();
   const entry = quotesRes?.data?.[sym] ?? quotesRes?.data?.[symbol];
   const list = Array.isArray(entry) ? entry : entry ? [entry] : [];
+  // Fail closed: only consider ACTIVE coins with a FINITE rank. If none qualify
+  // we return undefined (don't trade a symbol we can't disambiguate from impostors).
   const matches = list.filter((c: any) => String(c?.symbol).toUpperCase() === sym && c?.is_active === 1);
-  const pool = matches.length ? matches : list;
   let bestId: number | undefined;
   let bestRank = Number.POSITIVE_INFINITY;
-  for (const c of pool) {
+  for (const c of matches) {
     const rank = typeof c?.cmc_rank === "number" ? c.cmc_rank : Number.POSITIVE_INFINITY;
     if (rank < bestRank && typeof c?.id === "number") {
       bestRank = rank;
@@ -42,7 +43,9 @@ export function parseBscAddress(infoEntry: any): string | undefined {
   const list = d?.contract_address;
   if (!Array.isArray(list)) return undefined;
   const bsc = list.find((c: any) => c?.platform?.name === BSC_PLATFORM);
-  return typeof bsc?.contract_address === "string" ? bsc.contract_address : undefined;
+  const addr = bsc?.contract_address;
+  // Validate it's a real EVM address — never hand a malformed/garbage string to a swap.
+  return typeof addr === "string" && /^0x[0-9a-fA-F]{40}$/.test(addr) ? addr : undefined;
 }
 
 const cache = new Map<string, string>(Object.entries(CURATED));

@@ -1,5 +1,6 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { spawnTwak } from "../exec/index.js";
+import { atomicWriteJson } from "../util/io.js";
 import type { PortfolioState } from "../types.js";
 
 // Restart-state recovery (Phase 5). A 24/7 agent must rebuild its state from the
@@ -37,7 +38,7 @@ function loadPeak(): number {
 }
 
 export function savePeak(peakEquityUsd: number): void {
-  writeFileSync(PEAK_PATH, JSON.stringify({ peakEquityUsd }));
+  atomicWriteJson(PEAK_PATH, { peakEquityUsd });
 }
 
 /** Read live wallet equity from chain (twak portfolio) → PortfolioState. The peak
@@ -45,8 +46,12 @@ export function savePeak(peakEquityUsd: number): void {
 export async function loadPortfolioFromChain(): Promise<PortfolioState> {
   const holdings = await spawnTwak(["wallet", "portfolio", "--chains", "bsc", "--json"]);
   const { equityUsd, positions } = parseWalletPortfolio(holdings);
-  const peakEquityUsd = Math.max(loadPeak(), equityUsd);
-  savePeak(peakEquityUsd);
+  // Only ratchet the persisted peak from a sane (finite, positive) read — a bad
+  // chain read must not permanently corrupt the drawdown floor.
+  const persistedPeak = loadPeak();
+  const goodRead = Number.isFinite(equityUsd) && equityUsd > 0;
+  const peakEquityUsd = goodRead ? Math.max(persistedPeak, equityUsd) : persistedPeak;
+  if (goodRead) savePeak(peakEquityUsd);
   // Daily counters reset on boot; the daily-qualifier (twak automate) guarantees
   // the trade minimum independently, so a mid-day restart can't cause a DQ there.
   return { equityUsd, peakEquityUsd, positions, tradesToday: 0, tradeVolumeTodayUsd: 0 };
