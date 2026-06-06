@@ -1,6 +1,8 @@
 import OpenAI from "openai";
 import { z } from "zod";
 import { config } from "../config.js";
+import { detectRegime } from "../regime/index.js";
+import { summarize } from "../signals/features.js";
 import type { Proposal, SignalBundle } from "../types.js";
 
 // BRAIN LAYER — the LLM proposes a decision; it NEVER sizes and NEVER signs.
@@ -12,6 +14,8 @@ const SYSTEM_PROMPT = `You are the analysis brain of an autonomous crypto tradin
 Given a market signal bundle, output ONE trade decision as strict JSON:
 { "regime": "trending"|"chopping"|"risk_off", "asset": string, "direction": "buy"|"sell"|"hold", "conviction": number(0..1), "thesis": string }
 The thesis MUST be falsifiable (state what must be true for this to work).
+The input includes 'features' (named signal buckets) and 'detectedRegime' (a deterministic hint) — weigh them, but you may disagree with the hint if the data warrants.
+If the asset is flagged as a honeypot, never propose a buy.
 You do NOT decide position size and you do NOT execute — a deterministic risk kernel does that.`;
 
 // Validate the model's JSON before it touches the rest of the system. A 24/7
@@ -47,17 +51,22 @@ export function parseProposal(raw: string, fallbackAsset: string): Proposal {
   }
 }
 
-// Phase 3 makes this learn: per-regime/per-signal confidence weights (updated by
-// the ledger's self-grade) get injected here so the next decision reflects past outcomes.
+// The brain reasons over the raw bundle PLUS named features and a deterministic
+// regime hint, so the model isn't classifying regime from raw numbers alone.
+// Learned confidence weights are applied downstream (agent loop) — see learning/.
 export async function propose(bundle: SignalBundle): Promise<Proposal> {
+  const features = summarize(bundle);
+  const detectedRegime = detectRegime(bundle);
+
   if (!config.llm.apiKey) {
-    // TRACER BULLET: deterministic stub so the pipe runs keyless.
+    // TRACER BULLET: deterministic stub so the pipe runs keyless. Uses the real
+    // detected regime; holds (no live trading) until a key is set.
     return {
-      regime: "chopping",
+      regime: detectedRegime,
       asset: bundle.asset,
       direction: "hold",
       conviction: 0.1,
-      thesis: "[stub] no LLM key set; defaulting to hold until brain is wired.",
+      thesis: "[stub] no LLM key set; holding. Detected regime + features wired.",
     };
   }
 
@@ -67,7 +76,7 @@ export async function propose(bundle: SignalBundle): Promise<Proposal> {
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: JSON.stringify(bundle) },
+      { role: "user", content: JSON.stringify({ bundle, features, detectedRegime }) },
     ],
   });
   return parseProposal(res.choices[0]?.message?.content ?? "{}", bundle.asset);
