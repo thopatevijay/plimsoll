@@ -11,10 +11,13 @@ import { mapQuotePrice } from "./cmc.js";
 // BSC USDC is 18 decimals, so $0.01 = 1e16; we cap at $0.02 for headroom.
 // Returns the price, or undefined on failure (caller falls back to free REST).
 const MAX_PAYMENT_ATOMIC = "20000000000000000"; // $0.02 (USDC, 18-dec on BSC)
+// Pin the USDC route by CONTRACT ADDRESS: --prefer-asset matches the token NAME
+// ("USD Coin"), and "USDC" is not a substring of it. The address is exact.
+const USDC_BSC = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 
 export async function fetchX402Price(symbol: string): Promise<number | undefined> {
   const url = `${config.cmc.x402Base}/v3/cryptocurrency/quotes/latest?symbol=${encodeURIComponent(symbol)}`;
-  const args = buildX402Args(url, MAX_PAYMENT_ATOMIC, { preferAsset: "USDC", autoApprove: true });
+  const args = buildX402Args(url, MAX_PAYMENT_ATOMIC, { preferAsset: USDC_BSC, autoApprove: true });
   const res = await spawnTwak(args);
 
   // twak returns the x402 endpoint's response body (CMC quotes JSON), possibly
