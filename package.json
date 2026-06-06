@@ -8,6 +8,7 @@
     "dev": "tsx src/agent.ts",
     "tracer": "tsx src/agent.ts --once",
     "backtest": "tsx src/backtest/run.ts",
+    "signals": "tsx src/signals/inspect.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
