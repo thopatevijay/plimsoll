@@ -3,6 +3,7 @@ import {
   applyWeights,
   getRegimeWeight,
   initialWeights,
+  learnFromOutcome,
   updateRegimeWeight,
 } from "../src/learning/index.js";
 import type { Proposal } from "../src/types.js";
@@ -41,5 +42,25 @@ describe("learning weights", () => {
     for (let i = 0; i < 20; i++) w = updateRegimeWeight(w, "risk_off", -1); // → 0.5
     const scaled = applyWeights(prop("risk_off", 0.8), w);
     expect(scaled.conviction).toBeCloseTo(0.4); // 0.8 * 0.5
+  });
+});
+
+describe("learnFromOutcome (closing the loop)", () => {
+  it("raises the regime weight on a thesis-predicted win", () => {
+    const { weights, grade } = learnFromOutcome(initialWeights(), "trending", {
+      pnlUsd: 30,
+      thesisHeld: true,
+    });
+    expect(grade).toBe(1);
+    expect(getRegimeWeight(weights, "trending")).toBeGreaterThan(1);
+  });
+
+  it("lowers the regime weight on a wrong, thesis-broke loss", () => {
+    const { weights, grade } = learnFromOutcome(initialWeights(), "chopping", {
+      pnlUsd: -30,
+      thesisHeld: false,
+    });
+    expect(grade).toBe(-1);
+    expect(getRegimeWeight(weights, "chopping")).toBeLessThan(1);
   });
 });

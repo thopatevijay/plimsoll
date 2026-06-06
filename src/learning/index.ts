@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { selfGrade } from "../ledger/index.js";
 import type { Proposal, Regime } from "../types.js";
 
 // THE LEARNING LOOP (the differentiator). The brain proposes with a conviction;
@@ -42,6 +43,17 @@ export function updateRegimeWeight(
 export function applyWeights(p: Proposal, w: ConfidenceWeights): Proposal {
   const scaled = clamp(p.conviction * getRegimeWeight(w, p.regime), 0, 1);
   return { ...p, conviction: scaled };
+}
+
+/** Close the loop: grade a resolved trade and fold the result into the weights.
+ *  Returns the new weights and the grade (for the ledger entry). Pure. */
+export function learnFromOutcome(
+  w: ConfidenceWeights,
+  regime: Regime,
+  outcome: { pnlUsd: number; thesisHeld: boolean },
+): { weights: ConfidenceWeights; grade: number } {
+  const grade = selfGrade(outcome);
+  return { weights: updateRegimeWeight(w, regime, grade), grade };
 }
 
 function clamp(n: number, lo: number, hi: number): number {
