@@ -32,3 +32,33 @@ export function readAll(): LedgerEntry[] {
     .filter(Boolean)
     .map((l) => JSON.parse(l) as LedgerEntry);
 }
+
+// The "thought-stream" — renders a ledger entry as a readable narrative for the
+// live demo. This is what makes the agent's reasoning watchable: signal → thesis
+// → verdict → outcome, in plain language, instead of a raw JSON dump.
+export function renderEntry(e: LedgerEntry): string {
+  const t = e.ts.slice(11, 19); // HH:MM:SS
+  const p = e.proposal;
+  const lines = [
+    `🧠 ${t}  ${p.regime.toUpperCase()} → ${p.direction} ${p.asset}  (conviction ${p.conviction.toFixed(2)})`,
+    `   thesis: ${p.thesis}`,
+  ];
+  lines.push(
+    e.decision.ok
+      ? `   ✅ approved: ${e.decision.order.direction} $${e.decision.order.sizeUsd.toFixed(2)} ${e.decision.order.asset}`
+      : `   🛡️ blocked: ${e.decision.reason}`,
+  );
+  if (e.exec) lines.push(`   ⛓️  tx: ${e.exec.txHash}`);
+  if (e.outcome) {
+    const sign = e.outcome.pnlUsd >= 0 ? "+" : "";
+    lines.push(
+      `   📈 outcome: ${sign}$${e.outcome.pnlUsd.toFixed(2)} · thesis ${e.outcome.thesisHeld ? "held" : "broke"}` +
+        (e.selfGrade !== undefined ? ` · grade ${e.selfGrade.toFixed(2)}` : ""),
+    );
+  }
+  return lines.join("\n");
+}
+
+export function renderStream(entries: LedgerEntry[]): string {
+  return entries.map(renderEntry).join("\n\n");
+}
