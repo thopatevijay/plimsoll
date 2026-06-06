@@ -8,7 +8,7 @@
 
 /** /v2/cryptocurrency/quotes/latest → data keyed by symbol (array or object). */
 export function mapQuotePrice(raw: any, symbol: string): number | undefined {
-  const entry = raw?.data?.[symbol];
+  const entry = raw?.data?.[symbol] ?? raw?.data?.[symbol.toUpperCase()];
   const item = Array.isArray(entry) ? entry[0] : entry;
   const price = item?.quote?.USD?.price;
   return typeof price === "number" ? price : undefined;

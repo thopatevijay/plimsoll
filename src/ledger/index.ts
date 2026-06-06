@@ -27,10 +27,16 @@ export function append(entry: LedgerEntry): void {
 
 export function readAll(): LedgerEntry[] {
   if (!existsSync(LEDGER_PATH)) return [];
-  return readFileSync(LEDGER_PATH, "utf8")
-    .split("\n")
-    .filter(Boolean)
-    .map((l) => JSON.parse(l) as LedgerEntry);
+  const out: LedgerEntry[] = [];
+  for (const line of readFileSync(LEDGER_PATH, "utf8").split("\n")) {
+    if (!line) continue;
+    try {
+      out.push(JSON.parse(line) as LedgerEntry); // skip a truncated final line after a crash
+    } catch {
+      /* ignore corrupt line */
+    }
+  }
+  return out;
 }
 
 // The "thought-stream" — renders a ledger entry as a readable narrative for the

@@ -19,7 +19,6 @@ export async function fetchMcpSignals(symbol: string): Promise<McpSignals> {
     requestInit: { headers: { "X-CMC-MCP-API-KEY": config.cmc.apiKey } },
   });
   const client = new Client({ name: "sentinel", version: "0.1.0" });
-  await client.connect(transport);
 
   const callJson = async (name: string, args: Record<string, unknown>): Promise<unknown> => {
     const res = (await client.callTool({ name, arguments: args })) as {
@@ -31,6 +30,7 @@ export async function fetchMcpSignals(symbol: string): Promise<McpSignals> {
   };
 
   try {
+    await client.connect(transport); // inside try so a connect failure still hits finally
     const out: McpSignals = {};
     out.fundingRate = await callJson("get_global_crypto_derivatives_metrics", {})
       .then(parseFundingRate)
@@ -52,5 +52,6 @@ export async function fetchMcpSignals(symbol: string): Promise<McpSignals> {
     return out;
   } finally {
     await client.close().catch(() => {});
+    await transport.close().catch(() => {});
   }
 }

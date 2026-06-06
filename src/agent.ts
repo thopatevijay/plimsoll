@@ -17,9 +17,18 @@ import {
 import { applyWeights, learnFromOutcome, loadWeights, saveWeights } from "./learning/index.js";
 import type { LedgerEntry, PortfolioState } from "./types.js";
 
+/** Parse a positive-ish env number, falling back to default on NaN/garbage. */
+function envNum(name: string, def: number, min: number): number {
+  const n = Number(process.env[name]);
+  return Number.isFinite(n) && n >= min ? n : def;
+}
+
 // How long a decision is held before we grade it (and learn). Configurable so a
 // demo can set it short (e.g. 60000) and watch the agent adapt quickly.
-const HOLD_MS = Number(process.env.SENTINEL_HOLD_MS ?? 3_600_000); // 1h default
+const HOLD_MS = envNum("SENTINEL_HOLD_MS", 3_600_000, 0); // 1h default
+// Hard cap so an open decision that's never re-priced can't grow positions.json
+// forever (e.g. its asset was removed from the watchlist mid-week).
+const MAX_POSITION_AGE_MS = Math.max(HOLD_MS * 6, 12 * 3_600_000);
 
 // THE TRACER BULLET (Phase 1): the thinnest end-to-end pipe, proving the layers
 // compose — signal → brain → kernel → exec → ledger. Each layer is a hollow stub
@@ -55,7 +64,8 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
   const now = Date.now();
   const remaining: OpenPosition[] = [];
   for (const pos of loadPositions()) {
-    if (pos.asset === asset && currentPrice !== undefined && now - pos.openedAt >= HOLD_MS) {
+    const age = now - pos.openedAt;
+    if (pos.asset === asset && currentPrice !== undefined && currentPrice > 0 && age >= HOLD_MS) {
       const outcome = computeOutcome(pos, currentPrice, currentRegime);
       const { weights: updated, grade } = learnFromOutcome(weights, pos.regime, outcome);
       weights = updated;
@@ -70,6 +80,9 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
       console.log(
         `[learn]  ${asset} ${pos.direction}: pnl $${outcome.pnlUsd.toFixed(2)}, thesis ${outcome.thesisHeld ? "held" : "broke"}, grade ${grade.toFixed(2)} → ${pos.regime} weight ${weights.byRegime[pos.regime].toFixed(2)}`,
       );
+    } else if (age >= MAX_POSITION_AGE_MS) {
+      // Never priced/revisited within the bound — drop it so the file can't grow forever.
+      console.log(`[learn]  dropping stale ${pos.asset} ${pos.direction} (age ${Math.round(age / 3_600_000)}h, no price to grade)`);
     } else {
       remaining.push(pos);
     }
@@ -97,7 +110,7 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
       entry.exec = await executeSwap(decision.order);
       console.log(`        ${entry.exec.txHash}`);
       // Record the decision to be graded after the hold horizon (drives learning).
-      if (currentPrice !== undefined) {
+      if (currentPrice !== undefined && currentPrice > 0) {
         const open = loadPositions();
         open.push({
           id: entry.ts,
@@ -137,20 +150,26 @@ async function runContinuous(): Promise<void> {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  const intervalMs = Number(process.env.SENTINEL_INTERVAL_MS ?? 300_000); // 5 min
+  const intervalMs = envNum("SENTINEL_INTERVAL_MS", 300_000, 1000); // 5 min, min 1s
   await alert("info", `starting (mode=${config.mode}, ${watchlist.length} assets, ${Math.round(intervalMs / 1000)}s cadence)`);
   let i = 0;
+  let consecutiveFailures = 0;
   while (true) {
     const asset = watchlist[i % watchlist.length] ?? "CAKE";
+    let ok = true;
     try {
       const entry = await runOnce(asset);
       if (entry.exec) await alert("info", `${config.mode}: ${entry.proposal.direction} ${asset} → ${entry.exec.txHash}`);
     } catch (e) {
+      ok = false;
       await alert("error", `cycle ${i} (${asset}) failed: ${(e as Error).message}`);
     }
     if (i % 12 === 0) await alert("info", `heartbeat — cycle ${i}, watching ${asset}`);
     i++;
-    await sleep(intervalMs);
+    // Exponential backoff on sustained failure (capped 32×) so a prolonged API
+    // outage doesn't hammer endpoints every interval. Resets on a clean cycle.
+    consecutiveFailures = ok ? 0 : Math.min(consecutiveFailures + 1, 5);
+    await sleep(intervalMs * 2 ** consecutiveFailures);
   }
 }
 

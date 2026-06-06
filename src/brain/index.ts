@@ -65,14 +65,20 @@ export async function propose(bundle: SignalBundle): Promise<Proposal> {
     return ruleProposer(bundle);
   }
 
-  const client = new OpenAI({ apiKey: config.llm.apiKey });
-  const res = await client.chat.completions.create({
-    model: config.llm.model,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      { role: "user", content: JSON.stringify({ bundle, features, detectedRegime }) },
-    ],
-  });
-  return parseProposal(res.choices[0]?.message?.content ?? "{}", bundle.asset);
+  try {
+    const client = new OpenAI({ apiKey: config.llm.apiKey });
+    const res = await client.chat.completions.create({
+      model: config.llm.model,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: JSON.stringify({ bundle, features, detectedRegime }) },
+      ],
+    });
+    return parseProposal(res.choices[0]?.message?.content ?? "{}", bundle.asset);
+  } catch {
+    // Provider outage / rate-limit → fall back to the deterministic rule engine
+    // instead of aborting the cycle. The agent keeps deciding (conservatively).
+    return ruleProposer(bundle);
+  }
 }
