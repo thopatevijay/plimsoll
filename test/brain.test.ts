@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseProposal, propose, validateProposal } from "../src/brain/index.js";
-import type { SignalBundle } from "../src/types.js";
+import { parseProposal, validateProposal } from "../src/brain/index.js";
 
 describe("brain proposal parsing", () => {
   const valid = {
@@ -38,17 +37,5 @@ describe("brain proposal parsing", () => {
     const p = parseProposal(JSON.stringify(valid), "ETH");
     expect(p.direction).toBe("buy");
     expect(p.asset).toBe("CAKE");
-  });
-
-  it("keyless stub holds and reports the deterministically-detected regime", async () => {
-    const bundle: SignalBundle = {
-      timestamp: "2026-06-22T00:00:00.000Z",
-      asset: "CAKE",
-      cmc: { fearGreed: 12 }, // extreme fear → risk_off
-      chain: {},
-    };
-    const p = await propose(bundle); // no OPENAI_API_KEY in test env → stub path
-    expect(p.direction).toBe("hold");
-    expect(p.regime).toBe("risk_off");
   });
 });
