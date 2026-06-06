@@ -93,20 +93,35 @@ test/        kernel unit tests
 ```bash
 npm install
 cp .env.example .env     # fill in keys (see .env.example)
-npm test                 # unit tests (risk kernel)
+npm test                 # unit tests (88, deterministic + offline)
 npm run typecheck        # strict TS
-npm run tracer           # the end-to-end pipe (runs keyless with stubs)
+npm run tracer           # one decision cycle, end to end (real data, dry-run quote)
+npm run signals BNB      # inspect the live signal bundle for a symbol
+npm run backtest         # replay the full loop + learning on a synthetic scenario
+npm run dev              # the unattended live-week runner (SENTINEL_MODE=live to trade)
 ```
+
+**Modes:** `SENTINEL_MODE=dev` (default) runs *dry-run-live* — real signals, real
+LLM, real on-chain quotes, but no signing/spend. `SENTINEL_MODE=live` executes
+real swaps + pays for data via x402 (needs a funded wallet).
 
 The risk kernel is the most-tested unit — every limit (allowlist, sizing,
 drawdown kill-switch, conviction scaling) has a test, because it's the floor
 that keeps the agent inside its rules.
 
+## Two tracks, one strategy
+
+The same regime-gated momentum barbell powers both the live agent (Track 1) and a
+**backtestable CMC Skill** (Track 2): [`skills/sentinel-strategy/SKILL.md`](skills/sentinel-strategy/SKILL.md).
+Inspectable as a Skill, runnable as an autonomous agent.
+
 ## Status
 
-Active build — BNB Hack, June 2026. Tracer-bullet skeleton in place
-(signal → brain → kernel → exec → ledger proven end to end); layers thickened
-phase by phase.
+Active build — BNB Hack, June 2026. Full pipeline live end-to-end: chain equity →
+real CMC signals (REST + Agent Hub MCP, x402 pay-per-call) → LLM brain → risk
+kernel → self-custodial TWAK execution → decision ledger → outcome→learning. The
+agent learns from its own track record (per-regime confidence weights) and is
+bounded by a hard drawdown kill-switch.
 
 ## License
 
