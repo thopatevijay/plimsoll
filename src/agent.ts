@@ -5,8 +5,9 @@ import { evaluate } from "./kernel/index.js";
 import { executeSwap } from "./exec/index.js";
 import { append } from "./ledger/index.js";
 import { emptyPortfolio } from "./portfolio/index.js";
+import { loadPortfolioFromChain } from "./ops/state.js";
 import { applyWeights, loadWeights } from "./learning/index.js";
-import type { LedgerEntry } from "./types.js";
+import type { LedgerEntry, PortfolioState } from "./types.js";
 
 // THE TRACER BULLET (Phase 1): the thinnest end-to-end pipe, proving the layers
 // compose — signal → brain → kernel → exec → ledger. Each layer is a hollow stub
@@ -16,8 +17,16 @@ import type { LedgerEntry } from "./types.js";
 async function runOnce(asset: string): Promise<void> {
   const constitution = loadConstitution();
 
-  // Phase 5 reads this from chain on every boot (never local memory). Stub for now.
-  const portfolio = emptyPortfolio(1000);
+  // Restart-state: rebuild equity/positions from chain on every boot (never local
+  // memory). Falls back to a stub if the wallet/CLI isn't reachable.
+  let portfolio: PortfolioState;
+  try {
+    portfolio = await loadPortfolioFromChain();
+    console.log(`[0/5] state    → equity $${portfolio.equityUsd.toFixed(2)} from chain (peak $${portfolio.peakEquityUsd.toFixed(2)})`);
+  } catch (e) {
+    portfolio = emptyPortfolio(1000);
+    console.log(`[0/5] state    → chain read failed, using $1000 stub: ${(e as Error).message}`);
+  }
 
   console.log(`\n[1/5] signals  → fetching bundle for ${asset}`);
   const bundle = await fetchSignalBundle(asset);

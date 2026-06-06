@@ -10,3 +10,4 @@ weights.json
 .wallet/
 *.key
 .dev-refs.md
+peak.json
