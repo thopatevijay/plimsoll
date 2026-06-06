@@ -9,3 +9,4 @@ weights.json
 .DS_Store
 .wallet/
 *.key
+.dev-refs.md
