@@ -1,4 +1,4 @@
-import { loadConstitution } from "./config.js";
+import { config, loadConstitution } from "./config.js";
 import { fetchSignalBundle } from "./signals/index.js";
 import { propose } from "./brain/index.js";
 import { evaluate } from "./kernel/index.js";
@@ -37,9 +37,14 @@ async function runOnce(asset: string): Promise<void> {
 
   if (decision.ok) {
     console.log(`        approved: ${decision.order.direction} $${decision.order.sizeUsd.toFixed(2)} ${decision.order.asset}`);
-    console.log(`[4/5] exec     → TWAK swap (tracer: no real tx)`);
-    entry.exec = await executeSwap(decision.order);
-    console.log(`        tx=${entry.exec.txHash}`);
+    const mode = config.mode === "live" ? "LIVE execute" : "dry-run quote";
+    console.log(`[4/5] exec     → TWAK swap (${mode})`);
+    try {
+      entry.exec = await executeSwap(decision.order);
+      console.log(`        ${entry.exec.txHash}`);
+    } catch (e) {
+      console.log(`        exec failed (non-fatal): ${(e as Error).message}`);
+    }
   } else {
     console.log(`        rejected: ${decision.reason}`);
     console.log(`[4/5] exec     → skipped (kernel rejected)`);
