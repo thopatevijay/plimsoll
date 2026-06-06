@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "_comment": "The rules the deterministic kernel enforces BEFORE any signing. Hashed + committed on-chain (ERC-8004) before the trading week. Thresholds are provisional until the organizers answer the drawdown/cost/capital questions (see ../HACKATHON_RESEARCH.md §open questions).",
+
+  "risk": {
+    "hardDrawdownPct": 20,
+    "dqDrawdownPct": 30,
+    "_comment_dd": "Kill-switch trips at 20% — a 10-pt buffer below the ~30% DQ line. Confirm exact DQ definition with organizers."
+  },
+
+  "sizing": {
+    "perTradeMaxPctOfEquity": 15,
+    "dailyMaxTradeVolumePctOfEquity": 40,
+    "maxSlippageBps": 100
+  },
+
+  "allocation": {
+    "survivalCorePct": 35,
+    "activeSleevePct": 65,
+    "_comment_alloc": "Barbell. Core bounds drawdown + carries the daily qualifier; sleeve takes regime-gated momentum shots. Re-tune once capital-normalization is confirmed."
+  },
+
+  "trading": {
+    "minTradesPerDay": 1,
+    "spotOnly": true,
+    "_comment_spot": "TWAK has no perps; spot-only is forced (and it's the #1 DQ-risk reduction)."
+  },
+
+  "allowlist": {
+    "_comment": "The 149 eligible BEP-20 tokens (CMC-listed). PLACEHOLDER subset — paste the full list from ../HACKATHON_RESEARCH.md before the trading week. Trades outside this list do not count.",
+    "symbols": ["ETH", "USDT", "USDC", "XRP", "DOGE", "ADA", "LINK", "AVAX", "SHIB", "CAKE", "TWT", "FLOKI", "PENDLE", "BONK", "FET", "INJ", "ATOM", "UNI", "AAVE", "COMP"]
+  }
+}
