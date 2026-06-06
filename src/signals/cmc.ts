@@ -30,6 +30,39 @@ export function mapOhlcvCloses(raw: any, symbol: string): number[] {
     .filter((c: any): c is number => typeof c === "number");
 }
 
+// ---- CMC MCP (Agent Hub) response parsers ----
+// MCP tools return a JSON string in content[0].text; these parse the decoded
+// object. Shapes captured live from the server (see commit history).
+
+function toNum(x: unknown): number | undefined {
+  const n = typeof x === "string" ? Number.parseFloat(x) : typeof x === "number" ? x : Number.NaN;
+  return Number.isFinite(n) ? n : undefined;
+}
+
+/** get_global_crypto_derivatives_metrics → fundingRate.current (string). */
+export function parseFundingRate(obj: any): number | undefined {
+  return toNum(obj?.fundingRate?.current);
+}
+
+/** get_global_metrics_latest → sentiment.fear_greed.current.index (0-100). */
+export function parseFearGreedMcp(obj: any): number | undefined {
+  const v = obj?.sentiment?.fear_greed?.current?.index;
+  return typeof v === "number" ? v : undefined;
+}
+
+/** get_crypto_technical_analysis → { rsi14, macd } (string numbers). */
+export function parseTechnicals(obj: any): { rsi14?: number; macd?: number } {
+  return { rsi14: toNum(obj?.rsi?.rsi14), macd: toNum(obj?.macd?.macdLine) };
+}
+
+/** search_cryptos → the CMC numeric id for an exact symbol match (string). */
+export function parseSearchId(arr: any, symbol: string): string | undefined {
+  if (!Array.isArray(arr)) return undefined;
+  const hit = arr.find((x: any) => String(x?.symbol).toUpperCase() === symbol.toUpperCase());
+  const id = hit?.id ?? arr[0]?.id;
+  return id !== undefined && id !== null ? String(id) : undefined;
+}
+
 /** /v1/dex/security/detail → treat anything flagged as a honeypot/high-risk as unsafe. */
 export function mapIsHoneypot(raw: any): boolean {
   const d = raw?.data;
