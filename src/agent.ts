@@ -9,6 +9,7 @@ import { emptyPortfolio } from "./portfolio/index.js";
 import { loadPortfolioFromChain } from "./ops/state.js";
 import { recordDailyTrade } from "./ops/daily.js";
 import { alert } from "./ops/heartbeat.js";
+import { writeSnapshot } from "./ops/snapshot.js";
 import {
   computeOutcome,
   loadPositions,
@@ -140,6 +141,7 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
 
   console.log(`[5/5] ledger   → appended`);
   append(entry);
+  writeSnapshot(entry, portfolio, constitution); // emit dashboard state (best-effort)
   console.log(`\n✅ cycle complete — pipe flows end to end.`);
   return entry;
 }
