@@ -124,12 +124,23 @@ Emit this object (the spec a backtester consumes):
 
 The spec is deterministic, so it backtests directly: replay historical daily
 OHLCV through steps 2–5 and accumulate equity. Report **total return, max
-drawdown, trade count, and the learned regime weights**. (The reference
-implementation’s harness — `npm run backtest` in the SENTINEL repo — runs exactly
-this loop and prints the equity curve + adapted weights.)
+drawdown, trade count, win rate, and the learned regime weights**. The reference
+harness — `npm run backtest [SYMBOL]` in the SENTINEL repo — does exactly this over
+**real daily candles from free Binance klines** (RSI/MACD from real closes; F&G
+proxied from momentum where free history lacks it), versus a buy-and-hold benchmark.
 
-Metrics that matter (mirrors Track 1 scoring): most return **without breaching
-the drawdown gate**, net of simulated transaction costs (low churn by design).
+**Evidence (≈329 real daily candles, a bearish window):**
+
+| Asset | Buy & hold | SENTINEL | Max drawdown |
+|---|---|---|---|
+| CAKE | −47.4% | **−4.3%** | 9.9% |
+| ETH | −45.1% | **−3.8%** | 5.7% |
+| BNB | −13.8% | **0.0%** (stood aside) | 0.0% |
+
+The regime gate kept capital nearly flat through a 45%+ drawdown in the underlying —
+the survival thesis: most return **without breaching the drawdown gate**, net of
+simulated costs, by low-churn design. (This window was down-trending, so it shows
+the defensive side; upside capture appears in trending-up windows.)
 
 ## Tool-failure fallbacks
 

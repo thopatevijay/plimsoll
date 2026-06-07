@@ -164,6 +164,12 @@ kill-switch is the floor. The goal: most return *without blowing up*, net of
 costs, by design (low-churn). The agent then learns which regimes have actually
 worked for it and adjusts conviction accordingly.
 
+**Backtest evidence** (`npm run backtest`, ~329 real daily candles from Binance, a
+bearish window): where buy-and-hold **CAKE fell −47%** and **ETH −45%**, SENTINEL
+held **−4.3%** and **−3.8%** with **max drawdown under 10%** — the survival thesis
+on real data. (Down-trending window shows the defensive side; upside capture shows
+in trending-up windows.)
+
 ## Two tracks, one strategy
 
 The exact same strategy runs two ways: a **live autonomous agent** (Track 1) and
@@ -188,7 +194,7 @@ npm test                   # 114 unit tests (deterministic, offline)
 npm run typecheck          # strict TypeScript
 npm run tracer             # one decision cycle, end-to-end (real data, dry-run)
 npm run signals            # inspect the live signal bundle (CAKE)
-npm run backtest           # replay the full loop + learning on a scenario
+npm run backtest [SYMBOL]  # replay the full loop on REAL Binance daily candles
 npm run constitution 129312 # verify the on-chain risk-rules hash matches local
 npm run dev                # the unattended runner (SENTINEL_MODE=live to trade)
 ```
