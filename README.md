@@ -182,6 +182,12 @@ an inspectable, **backtestable CMC Skill** (Track 2 —
 the kernel guarding a trade → a self-custodial swap on BSC → the agent learning
 from a loss in real time.
 
+🖥️ **Live console** — *[dashboard link]* — the agent emits a state snapshot every
+cycle; [`dashboard/`](dashboard/) renders it: the decision pipeline (with the
+kernel visibly approving/vetoing), the LLM's falsifiable thesis, equity vs the
+kill-switch, all 8 signal families, the skill-vs-luck learning, the committed risk
+constitution, and live on-chain proof. `cd dashboard && npm run dev`.
+
 On-chain proof (BNB Smart Chain): a live x402 payment + a self-custodial swap via
 the Trust Wallet Agent Kit. *(tx hashes in the submission.)*
 
@@ -204,10 +210,11 @@ on-chain quotes, **no signing**. `live` = real swaps + x402 (funded wallet).
 
 ## Project layout
 
-`src/signals` (CMC + chain-native + x402) · `src/brain` (LLM + rule fallback) ·
+`src/signals` (CMC + chain-native + x402) · `src/brain` (Claude + rule fallback) ·
 `src/kernel` (deterministic risk) · `src/exec` (Trust Wallet Agent Kit) ·
-`src/ops` (restart-state, heartbeat, daily caps) · `src/learning` ·
-`src/ledger` · `src/identity` (ERC-8004 + constitution commit) · `agent.ts`.
+`src/ops` (restart-state, heartbeat, daily caps, snapshot) · `src/learning` ·
+`src/ledger` · `src/identity` (ERC-8004 + constitution commit) · `src/backtest`
+(real Binance klines) · `agent.ts` · `dashboard/` (Next.js live console).
 
 ## Future vision
 
