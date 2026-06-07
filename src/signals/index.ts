@@ -1,7 +1,7 @@
 import { config } from "../config.js";
 import { resolveBscToken } from "../tokens/index.js";
 import { mapFearGreed, mapQuotePrice } from "./cmc.js";
-import { fetchDexLiquidityUsd } from "./chain.js";
+import { fetchChainSignals } from "./chain.js";
 import { fetchMcpSignals, type McpSignals } from "./mcp.js";
 import { fetchX402Price } from "./x402.js";
 import type { SignalBundle } from "../types.js";
@@ -81,7 +81,10 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
       resolveBscToken(asset).catch(() => undefined),
     ]);
     if (bnbPrice && assetAddr?.startsWith("0x")) {
-      bundle.chain.liquidityUsd = await fetchDexLiquidityUsd(assetAddr, bnbPrice);
+      const chain = await fetchChainSignals(assetAddr, bnbPrice);
+      bundle.chain.liquidityUsd = chain.liquidityUsd;
+      bundle.chain.dexImbalance = chain.dexImbalance;
+      bundle.chain.walletFlow = chain.walletFlowUsd;
     }
   } catch {
     /* unverified liquidity — leave undefined */
