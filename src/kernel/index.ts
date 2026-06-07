@@ -4,6 +4,7 @@ import type {
   KernelDecision,
   PortfolioState,
   Proposal,
+  Regime,
 } from "../types.js";
 
 // Minimum DEX liquidity to enter a token — skip thin pools (slippage / rug risk).
@@ -15,6 +16,7 @@ export const MIN_LIQUIDITY_USD = 50_000;
 export interface SafetySignals {
   isHoneypot?: boolean; // honeypot.is verdict (undefined = unverified → don't block)
   liquidityUsd?: number; // on-chain DEX liquidity (undefined = unverified → don't block)
+  regime?: Regime; // the DETERMINISTIC regime (detectRegime), not the LLM's self-label
 }
 
 // SAFETY LAYER — the deterministic risk kernel. PURE function (no I/O) so it's
@@ -49,6 +51,13 @@ export function evaluate(
   //     Deterministic backstop to the brain's own checks: even if the proposer is
   //     talked into a bad entry, no honeypot/thin-pool buy is ever constructed.
   if (proposal.direction === "buy") {
+    // Survival rule, hard-enforced: the active sleeve goes FLAT in risk-off. The
+    // rule proposer obeys this; the LLM is only *guided* by the regime hint, so
+    // the kernel enforces it deterministically (on the detector's regime, not the
+    // model's self-label) — no new longs into a risk-off tape, ever.
+    if (safety.regime === "risk_off") {
+      return { ok: false, reason: "risk-off — active sleeve flat (no new longs)" };
+    }
     if (safety.isHoneypot === true) {
       return { ok: false, reason: "honeypot flagged — refusing buy" };
     }

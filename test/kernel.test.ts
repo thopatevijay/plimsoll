@@ -94,6 +94,17 @@ describe("risk kernel", () => {
       expect(evaluate(buy("CAKE"), healthy, C, {}).ok).toBe(true);
     });
 
+    it("refuses a BUY in a risk-off regime (active sleeve flat — even if the LLM proposes it)", () => {
+      const d = evaluate(buy("CAKE"), healthy, C, { regime: "risk_off" });
+      expect(d.ok).toBe(false);
+      if (!d.ok) expect(d.reason).toMatch(/risk-off/);
+    });
+
+    it("allows a BUY in trending / chopping regimes", () => {
+      expect(evaluate(buy("CAKE"), healthy, C, { regime: "trending" }).ok).toBe(true);
+      expect(evaluate(buy("CAKE"), healthy, C, { regime: "chopping" }).ok).toBe(true);
+    });
+
     it("lets a SELL through even when the token is a honeypot (you can always exit)", () => {
       const sell: Proposal = { ...buy("CAKE"), direction: "sell" };
       const d = evaluate(sell, healthy, C, { isHoneypot: true, liquidityUsd: 1 });

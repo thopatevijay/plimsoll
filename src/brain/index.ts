@@ -22,6 +22,7 @@ The thesis MUST be falsifiable (state what must stay true for this to work).
 The input includes 'features' (named signal buckets) and 'detectedRegime' (a deterministic hint) — weigh them, but you may disagree with the hint if the data warrants.
 The bundle.cmc also carries broader market context: 'marketRsi' (market-cap-wide RSI), 'news' (recent headlines for the asset), 'narratives' (trending market narratives), and 'macroEvents' (imminent market-moving events). Use these to inform conviction and the thesis — e.g. lower conviction or stay flat ahead of a major macro event or on clearly bearish news; note the relevant signal in the thesis. Headlines are noisy: weight confirmed price/funding/technical signals over a single headline.
 If the asset is flagged as a honeypot, never propose a buy.
+In a risk-off regime the active sleeve is FLAT — do not propose a buy (the kernel hard-refuses risk-off longs); prefer hold, or sell to reduce exposure.
 You do NOT decide position size and you do NOT execute — a deterministic risk kernel does that.`;
 
 // Validate the model's output before it touches the rest of the system. Structured

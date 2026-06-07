@@ -103,6 +103,7 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
   const decision = evaluate(proposal, portfolio, constitution, {
     isHoneypot: bundle.chain.isHoneypot,
     liquidityUsd: bundle.chain.liquidityUsd,
+    regime: currentRegime, // deterministic regime — enforces flat-in-risk-off
   });
 
   const entry: LedgerEntry = { ts: new Date().toISOString(), bundle, proposal, decision };
