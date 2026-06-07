@@ -11,7 +11,8 @@
     "signals": "tsx src/signals/inspect.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "constitution": "tsx src/identity/commit.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",
