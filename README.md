@@ -50,7 +50,35 @@ unattended. That's the gap SENTINEL fills.
 
 <sub>The AI suggests · the deterministic kernel decides · Trust Wallet signs (keys stay local) · the agent learns from every trade.</sub>
 
-## How it works
+## How it works — separation of powers
+
+The whole design rests on one idea: **the part that's creative is not the part
+that's trusted.** Think of a trading desk — a *junior analyst* pitches ideas, a
+*risk officer* can veto any pitch and sets the real size, and a *custodian* signs
+the cheque. The analyst never touches the checkbook. SENTINEL is built the same
+way: the **LLM proposes**, a **deterministic kernel decides and sizes**, and
+**Trust Wallet signs**. The LLM's worst idea still cannot breach a limit.
+
+Every cycle (default: one asset every 5 minutes) runs the same pipe:
+
+```
+ [0] STATE     read equity from chain (TWAK)  ── live mode FAILS CLOSED if it
+       │                                          can't read (never trades blind)
+       ▼
+ [1] SIGNALS   CMC: price · funding · Fear&Greed · RSI · MACD   (MCP, paid via x402)
+       │       Chain (RPC/viem): DEX liquidity · buy/sell flow · honeypot
+       ▼
+ [2] BRAIN     LLM → { regime, asset, direction, conviction, thesis }
+       │       then conviction × learned-weight-for-that-regime    (never sizes/signs)
+       ▼
+ [3] KERNEL    deterministic gate, in order: allowlist → honeypot → liquidity floor
+       │       → drawdown kill-switch → daily cap → SIZE the order   (pure function)
+       ▼
+ [4] EXEC      TWAK swap, signed locally — keys never leave   (dry-run quote in dev)
+       │
+       ▼
+ [5] LEDGER    append the full trace; later grade it (skill vs luck) → adapt weights
+```
 
 1. **Sees** — boots its equity from chain, then pulls live signals (CMC price +
    funding + Fear & Greed + RSI/MACD, paid via x402) and on-chain DEX liquidity/flow.
@@ -64,6 +92,73 @@ unattended. That's the gap SENTINEL fills.
 5. **Learns** — after a holding window, the decision is graded (skill vs luck)
    and the agent's per-regime confidence adapts. The decision ledger records the
    full trace — a readable, auditable trail of *why*.
+
+## Anatomy of one trade
+
+Here's a single decision walked through all six stages, with concrete numbers, so
+the abstract pipe above becomes real. (Equity is shown as $1,000 for clarity.)
+
+**`[0] STATE`** — equity read from chain: **$1,000**, peak $1,000 → drawdown **0%**.
+
+**`[1] SIGNALS`** — live bundle for **CAKE**:
+
+| source | signal | value |
+|---|---|---|
+| CMC (MCP, x402-paid) | price | $2.35 |
+| | funding rate | **+0.012** (longs pay → bullish tilt) |
+| | Fear & Greed | **62** (greed) |
+| | RSI / MACD | 58 / **+0.8** |
+| Chain (RPC) | DEX liquidity | **$13.3M** |
+| | buy/sell flow | +0.40 (net buying) · honeypot: **false** |
+
+**`[2] BRAIN`** — the deterministic detector hints **`trending`** (F&G ≥ 55 ✓,
+funding ≥ 0 ✓, MACD > 0 ✓). The LLM agrees and proposes:
+
+```json
+{ "regime": "trending", "asset": "CAKE", "direction": "buy", "conviction": 0.70,
+  "thesis": "Trending regime, funding non-negative, RSI 58 (not overbought) — holds while the regime persists and funding stays ≥ 0." }
+```
+
+The learning loop has seen trending work lately, so its weight is **1.20**.
+Conviction is scaled: `0.70 × 1.20 = 0.84`.
+
+**`[3] KERNEL`** — the deterministic gate runs in order; every check must pass
+*before* a size is even computed:
+
+| # | Check | Result |
+|---|---|---|
+| 1 | asset in the 148-token allowlist | ✓ CAKE |
+| 2 | honeypot pre-buy gate | ✓ not a honeypot |
+| 3 | DEX liquidity ≥ $50k floor | ✓ $13.3M |
+| 4 | drawdown < 20% kill-switch | ✓ 0% |
+| 5 | daily volume cap (40% = $400) | ✓ $0 used |
+| → | **size** = min(15% × $1,000 × 0.84, $150 cap, $400 left) | **$126** |
+
+→ **APPROVED:** buy **$126** of CAKE, max slippage 100 bps.
+
+**`[4] EXEC`** — TWAK swaps ~$126 USDC → ~53.6 CAKE, **signed locally** (keys never
+leave the machine), returning an on-chain tx hash. *(In `dev` mode this is a
+dry-run quote — no signing.)*
+
+**`[5] LEDGER + LEARN`** — the full trace (signals → proposal → decision) is
+appended to the auditable ledger. One hour later the decision is re-priced and
+**graded — was it skill or luck?**
+
+| What happened | PnL | Thesis held? | Grade | Effect on `trending` weight |
+|---|---|---|---|---|
+| CAKE +6%, **still trending** | +$7.50 | ✓ yes | **+1.0** (right, right reason) | 1.20 → **1.30** (lean in) |
+| CAKE +6%, but regime flipped risk-off | +$7.50 | ✗ no | **+0.3** (lucky) | barely moves |
+| CAKE −4%, regime held | −$5.00 | ✓ yes | **−0.3** (bad luck) | small dip |
+| CAKE −4%, regime broke | −$5.00 | ✗ no | **−1.0** (wrong) | 1.20 → **1.10** (pull back) |
+
+That grade flows back into the conviction multiplier for the *next* trending
+trade. **The agent gets more cautious where it's been wrong** — it's separating
+genuine edge from a lucky tape, not just chasing PnL.
+
+**…and when the kernel says no:** the same proposal in a **risk-off** regime →
+the active sleeve goes flat → `HOLD`. A buy of a token with a $20k pool → vetoed
+at check #3. A drawdown of 21% → kill-switch trips, all buys refused. The LLM
+cannot argue its way past any of these — they're a pure function.
 
 ## Built on the sponsor stack (each load-bearing)
 
@@ -106,12 +201,12 @@ the Trust Wallet Agent Kit. *(tx hashes in the submission.)*
 ```bash
 npm install
 cp .env.example .env       # CMC key (free tier), OpenAI key, TWAK creds, BSC RPC
-npm test                   # 100+ unit tests (deterministic, offline)
+npm test                   # 114 unit tests (deterministic, offline)
 npm run typecheck          # strict TypeScript
 npm run tracer             # one decision cycle, end-to-end (real data, dry-run)
-npm run signals BNB        # inspect the live signal bundle
+npm run signals            # inspect the live signal bundle (CAKE)
 npm run backtest           # replay the full loop + learning on a scenario
-npm run constitution       # print the committed risk-rules hash + commit commands
+npm run constitution 129312 # verify the on-chain risk-rules hash matches local
 npm run dev                # the unattended runner (SENTINEL_MODE=live to trade)
 ```
 
