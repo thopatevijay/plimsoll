@@ -28,6 +28,11 @@ const fmtUsd = (n: number) =>
   n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(1)}k` : `$${n.toFixed(2)}`;
 const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const tx = (h: string) => `https://bscscan.com/tx/${h}`;
+// Missing signals are legitimate (fail-soft fetch) — render a clean em-dash, never "undefined".
+const DASH = "—";
+const n = (v: number | undefined | null, d = 0, pre = "", suf = "") =>
+  v == null || !Number.isFinite(v) ? DASH : `${pre}${v.toFixed(d)}${suf}`;
+const usd = (v: number | undefined | null) => (v == null || !Number.isFinite(v) ? DASH : fmtUsd(v));
 
 function Panel({
   title,
@@ -304,18 +309,18 @@ function Signals({ snap }: { snap: Snapshot }) {
     <div className="grid grid-cols-1 gap-x-6 gap-y-0 sm:grid-cols-2">
       <div>
         <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-signal/70">CMC · agent hub</div>
-        {cell("price", `$${c.priceUsd?.toFixed(4)}`)}
-        {cell("fear & greed", c.fearGreed, c.fearGreed != null && c.fearGreed <= 25 ? "#E8635D" : "#E9EFEA")}
-        {cell("funding", c.fundingRate?.toFixed(4), (c.fundingRate ?? 0) < 0 ? "#E8635D" : "#5DD39E")}
-        {cell("RSI · MACD", `${c.rsi?.toFixed(0)} · ${c.macd?.toFixed(3)}`)}
-        {cell("market RSI", c.marketRsi?.toFixed(1), (c.marketRsi ?? 50) <= 30 ? "#E8635D" : "#E9EFEA")}
+        {cell("price", n(c.priceUsd, 4, "$"))}
+        {cell("fear & greed", n(c.fearGreed), c.fearGreed != null && c.fearGreed <= 25 ? "#E8635D" : undefined)}
+        {cell("funding", n(c.fundingRate, 4), c.fundingRate == null ? undefined : c.fundingRate < 0 ? "#E8635D" : "#5DD39E")}
+        {cell("RSI · MACD", `${n(c.rsi)} · ${n(c.macd, 3)}`)}
+        {cell("market RSI", n(c.marketRsi, 1), c.marketRsi != null && c.marketRsi <= 30 ? "#E8635D" : undefined)}
       </div>
       <div>
         <div className="mb-1 font-mono text-[10px] uppercase tracking-widest text-signal/70">on-chain · RPC</div>
-        {cell("DEX liquidity", fmtUsd(ch.liquidityUsd ?? 0), (ch.liquidityUsd ?? 0) < 50000 ? "#E8635D" : "#5DD39E")}
-        {cell("buy/sell flow", ch.dexImbalance?.toFixed(2), (ch.dexImbalance ?? 0) < 0 ? "#E8635D" : "#5DD39E")}
-        {cell("net wallet flow", fmtUsd(ch.walletFlow ?? 0))}
-        {cell("honeypot", ch.isHoneypot ? "FLAGGED" : "clear", ch.isHoneypot ? "#E8635D" : "#5DD39E")}
+        {cell("DEX liquidity", usd(ch.liquidityUsd), ch.liquidityUsd == null ? undefined : ch.liquidityUsd < 50000 ? "#E8635D" : "#5DD39E")}
+        {cell("buy/sell flow", n(ch.dexImbalance, 2), ch.dexImbalance == null ? undefined : ch.dexImbalance < 0 ? "#E8635D" : "#5DD39E")}
+        {cell("net wallet flow", usd(ch.walletFlow))}
+        {cell("honeypot", ch.isHoneypot == null ? DASH : ch.isHoneypot ? "FLAGGED" : "clear", ch.isHoneypot ? "#E8635D" : "#5DD39E")}
         <div className="pt-2">
           <div className="font-mono text-[9px] uppercase tracking-wide text-fog/60">macro watch</div>
           {(c.macroEvents ?? []).slice(0, 2).map((m) => (
