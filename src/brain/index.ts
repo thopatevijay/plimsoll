@@ -20,6 +20,7 @@ Given a market signal bundle, output ONE trade decision matching the required sc
 { regime: "trending"|"chopping"|"risk_off", asset: string, direction: "buy"|"sell"|"hold", conviction: number(0..1), thesis: string }
 The thesis MUST be falsifiable (state what must stay true for this to work).
 The input includes 'features' (named signal buckets) and 'detectedRegime' (a deterministic hint) — weigh them, but you may disagree with the hint if the data warrants.
+The bundle.cmc also carries broader market context: 'marketRsi' (market-cap-wide RSI), 'news' (recent headlines for the asset), 'narratives' (trending market narratives), and 'macroEvents' (imminent market-moving events). Use these to inform conviction and the thesis — e.g. lower conviction or stay flat ahead of a major macro event or on clearly bearish news; note the relevant signal in the thesis. Headlines are noisy: weight confirmed price/funding/technical signals over a single headline.
 If the asset is flagged as a honeypot, never propose a buy.
 You do NOT decide position size and you do NOT execute — a deterministic risk kernel does that.`;
 

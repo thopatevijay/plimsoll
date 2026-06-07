@@ -17,6 +17,10 @@ export interface SignalBundle {
     fundingRate?: number;
     rsi?: number;
     macd?: number;
+    marketRsi?: number; // market-cap-wide RSI14 (breadth) — CMC marketcap technical analysis
+    news?: string[]; // recent headlines for the asset — CMC news (event risk)
+    narratives?: string[]; // top trending narratives (social/narrative heat) — CMC
+    macroEvents?: string[]; // imminent market-moving macro events — CMC
   };
   chain: {
     liquidityUsd?: number; // on-chain DEX liquidity (PancakeSwap pair, via RPC) — safety gate

@@ -87,6 +87,55 @@ export function parseSearchId(arr: any, symbol: string): string | undefined {
   return id !== undefined && id !== null ? String(id) : undefined;
 }
 
+/** Pull one column (by header name) from a CMC `{headers, rows}` table. Robust to
+ *  column reordering. Returns up to `limit` non-empty string values. */
+function columnFrom(table: any, col: string, limit: number): string[] {
+  const headers = table?.headers;
+  const rows = table?.rows;
+  if (!Array.isArray(headers) || !Array.isArray(rows)) return [];
+  const idx = headers.indexOf(col);
+  if (idx < 0) return [];
+  return rows
+    .slice(0, limit)
+    .map((r: any) => String(r?.[idx] ?? "").trim())
+    .filter(Boolean);
+}
+
+/** get_crypto_latest_news → recent headline titles for the asset. */
+export function parseNewsHeadlines(raw: any, limit = 3): string[] {
+  return columnFrom(raw, "title", limit);
+}
+
+/** trending_crypto_narratives → top trending narrative names (social/narrative heat). */
+export function parseTrendingNarratives(raw: any, limit = 5): string[] {
+  return columnFrom(raw?.categoryList, "categoryName", limit);
+}
+
+/** get_upcoming_macro_events → imminent market-moving events as "title (date)". */
+export function parseMacroEvents(raw: any, limit = 3): string[] {
+  const t = raw?.upcomingEventNews;
+  const headers = t?.headers;
+  const rows = t?.rows;
+  if (!Array.isArray(headers) || !Array.isArray(rows)) return [];
+  const ti = headers.indexOf("title");
+  const di = headers.indexOf("eventDate");
+  if (ti < 0) return [];
+  return rows
+    .slice(0, limit)
+    .map((r: any) => {
+      const title = String(r?.[ti] ?? "").trim();
+      const date = di >= 0 ? String(r?.[di] ?? "").trim() : "";
+      return date ? `${title} (${date})` : title;
+    })
+    .filter((s: string) => s && s !== "()");
+}
+
+/** get_crypto_marketcap_technical_analysis → market-cap-wide RSI14 (breadth signal). */
+export function parseMarketRsi(raw: any): number | undefined {
+  const v = Number(raw?.rsi?.rsi14);
+  return Number.isFinite(v) ? v : undefined;
+}
+
 /** /v1/dex/security/detail → treat anything flagged as a honeypot/high-risk as unsafe. */
 export function mapIsHoneypot(raw: any): boolean {
   const d = raw?.data;

@@ -1,13 +1,26 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { config } from "../config.js";
-import { parseFearGreedMcp, parseFundingRate, parseSearchId, parseTechnicals } from "./cmc.js";
+import {
+  parseFearGreedMcp,
+  parseFundingRate,
+  parseMacroEvents,
+  parseMarketRsi,
+  parseNewsHeadlines,
+  parseSearchId,
+  parseTechnicals,
+  parseTrendingNarratives,
+} from "./cmc.js";
 
 export interface McpSignals {
   fundingRate?: number;
   fearGreed?: number;
   rsi?: number;
   macd?: number;
+  marketRsi?: number;
+  news?: string[];
+  narratives?: string[];
+  macroEvents?: string[];
 }
 
 // CMC Agent Hub via MCP. One session per signal fetch (connect → batch tool
@@ -29,25 +42,38 @@ export async function fetchMcpSignals(symbol: string): Promise<McpSignals> {
     return JSON.parse(res?.content?.[0]?.text ?? "");
   };
 
+  // Every field is independent + fail-soft: a missing tool result degrades to
+  // undefined, never crashes the cycle. soft() wraps each call.
+  const soft = <T>(p: Promise<T>): Promise<T | undefined> => p.catch(() => undefined);
+
   try {
     await client.connect(transport); // inside try so a connect failure still hits finally
     const out: McpSignals = {};
-    out.fundingRate = await callJson("get_global_crypto_derivatives_metrics", {})
-      .then(parseFundingRate)
-      .catch(() => undefined);
-    out.fearGreed = await callJson("get_global_metrics_latest", {})
-      .then(parseFearGreedMcp)
-      .catch(() => undefined);
 
-    const id = await callJson("search_cryptos", { query: symbol })
-      .then((r) => parseSearchId(r, symbol))
-      .catch(() => undefined);
+    // Batch A — global (no asset id needed): run in parallel.
+    const [funding, fearGreed, narratives, macroEvents, marketRsi, id] = await Promise.all([
+      soft(callJson("get_global_crypto_derivatives_metrics", {}).then(parseFundingRate)),
+      soft(callJson("get_global_metrics_latest", {}).then(parseFearGreedMcp)),
+      soft(callJson("trending_crypto_narratives", {}).then((r) => parseTrendingNarratives(r))),
+      soft(callJson("get_upcoming_macro_events", {}).then((r) => parseMacroEvents(r))),
+      soft(callJson("get_crypto_marketcap_technical_analysis", {}).then(parseMarketRsi)),
+      soft(callJson("search_cryptos", { query: symbol }).then((r) => parseSearchId(r, symbol))),
+    ]);
+    out.fundingRate = funding;
+    out.fearGreed = fearGreed;
+    out.narratives = narratives;
+    out.macroEvents = macroEvents;
+    out.marketRsi = marketRsi;
+
+    // Batch B — needs the resolved CMC id (per-asset technicals + news): parallel.
     if (id) {
-      const t = await callJson("get_crypto_technical_analysis", { id })
-        .then(parseTechnicals)
-        .catch(() => ({}) as ReturnType<typeof parseTechnicals>);
-      out.rsi = t.rsi14;
-      out.macd = t.macd;
+      const [tech, news] = await Promise.all([
+        soft(callJson("get_crypto_technical_analysis", { id }).then(parseTechnicals)),
+        soft(callJson("get_crypto_latest_news", { id }).then((r) => parseNewsHeadlines(r))),
+      ]);
+      out.rsi = tech?.rsi14;
+      out.macd = tech?.macd;
+      out.news = news;
     }
     return out;
   } finally {

@@ -71,6 +71,12 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
   bundle.cmc.fundingRate = mcp.fundingRate;
   bundle.cmc.rsi = mcp.rsi;
   bundle.cmc.macd = mcp.macd;
+  // Breadth (CMC Agent Hub): market-wide RSI + news/narratives/macro context.
+  // These feed the LLM brain's reasoning; the deterministic kernel is unaffected.
+  bundle.cmc.marketRsi = mcp.marketRsi;
+  bundle.cmc.news = mcp.news;
+  bundle.cmc.narratives = mcp.narratives;
+  bundle.cmc.macroEvents = mcp.macroEvents;
 
   // Chain-native: on-chain DEX liquidity for the asset (safety gate). Reads the
   // PancakeSwap pair directly via RPC; undefined = unverified (caller won't block).
