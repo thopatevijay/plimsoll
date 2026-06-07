@@ -78,7 +78,7 @@ stays ≥ 0."*
 ### 4. Apply the risk constitution (BEFORE any size is emitted)
 | Rule | Value |
 |---|---|
-| Allowlist | the 149 CMC-eligible BEP-20 tokens only |
+| Allowlist | the 148 CMC-eligible BEP-20 tokens only (official list states 149; SLX duplicated) |
 | Per-trade cap | 15% of equity |
 | Daily volume cap | 40% of equity |
 | Slippage cap | 100 bps |
