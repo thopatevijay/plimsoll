@@ -31,8 +31,9 @@ SENTINEL is built to be *run*, not just trusted:
   the agent adapts its confidence where it's been right or wrong.
 - **Safe by construction** — the AI only *proposes*. A pure, deterministic **risk
   kernel** sizes every trade and enforces a token allowlist, per-trade/daily
-  caps, slippage limits, a **hard drawdown kill-switch**, and a DEX-liquidity
-  safety gate — *before anything is signed*. Self-custodial execution via the
+  caps, slippage limits, a **hard drawdown kill-switch**, a DEX-liquidity
+  safety gate, and a **pre-buy honeypot check** (never enters a token it can't
+  exit) — *before anything is signed*. Self-custodial execution via the
   Trust Wallet Agent Kit; keys never leave the machine.
 
 ## Why now
@@ -56,7 +57,8 @@ unattended. That's the gap SENTINEL fills.
 2. **Decides** — an LLM proposes one trade with a *falsifiable thesis*
    (`{regime, asset, direction, conviction, thesis}`). It never sizes, never signs.
 3. **Guards** — the risk kernel sizes it, checks the allowlist, limits, slippage,
-   drawdown kill-switch, and DEX-liquidity floor. Out-of-policy → rejected.
+   drawdown kill-switch, DEX-liquidity floor, and a pre-buy honeypot gate.
+   Out-of-policy → rejected.
 4. **Executes** — approved orders are signed locally and swapped via the Trust
    Wallet Agent Kit on BNB Chain. Self-custodial, sole execution layer.
 5. **Learns** — after a holding window, the decision is graded (skill vs luck)

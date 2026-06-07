@@ -1,7 +1,8 @@
 import { config } from "../config.js";
 import { resolveBscToken } from "../tokens/index.js";
 import { mapFearGreed, mapQuotePrice } from "./cmc.js";
-import { fetchChainSignals } from "./chain.js";
+import { fetchChainSignals, type ChainSignals } from "./chain.js";
+import { checkHoneypot } from "./honeypot.js";
 import { fetchMcpSignals, type McpSignals } from "./mcp.js";
 import { fetchX402Price } from "./x402.js";
 import type { SignalBundle } from "../types.js";
@@ -80,14 +81,22 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
         .catch(() => undefined),
       resolveBscToken(asset).catch(() => undefined),
     ]);
-    if (bnbPrice && assetAddr?.startsWith("0x")) {
-      const chain = await fetchChainSignals(assetAddr, bnbPrice);
+    if (assetAddr?.startsWith("0x")) {
+      // Liquidity/flow (needs BNB price) + honeypot run in parallel — both keyed
+      // off the resolved token address. Honeypot is the pre-buy safety check.
+      const [chain, hp] = await Promise.all([
+        bnbPrice ? fetchChainSignals(assetAddr, bnbPrice) : Promise.resolve<ChainSignals>({}),
+        checkHoneypot(assetAddr),
+      ]);
       bundle.chain.liquidityUsd = chain.liquidityUsd;
       bundle.chain.dexImbalance = chain.dexImbalance;
       bundle.chain.walletFlow = chain.walletFlowUsd;
+      // Only assert a verdict when the check succeeded; unverified stays undefined
+      // (fail-open → not blocked, consistent with the liquidity gate).
+      if (hp.checked) bundle.chain.isHoneypot = hp.isHoneypot;
     }
   } catch {
-    /* unverified liquidity — leave undefined */
+    /* unverified chain signals — leave undefined */
   }
   return bundle;
 }

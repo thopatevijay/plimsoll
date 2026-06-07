@@ -1,4 +1,5 @@
 import { detectRegime } from "../regime/index.js";
+import { MIN_LIQUIDITY_USD } from "../kernel/index.js";
 import { summarize } from "../signals/features.js";
 import type { Proposal, Regime, SignalBundle } from "../types.js";
 
@@ -10,8 +11,6 @@ import type { Proposal, Regime, SignalBundle } from "../types.js";
 //
 // Intentionally conservative + low-churn: it only buys a confirmed trending setup
 // and otherwise stands aside (the daily qualifier handles the trade minimum).
-
-const MIN_LIQUIDITY_USD = 50_000; // skip thin DEX pools (slippage / rug risk)
 
 export function ruleProposer(bundle: SignalBundle): Proposal {
   const regime = detectRegime(bundle);

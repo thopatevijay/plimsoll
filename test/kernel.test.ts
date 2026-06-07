@@ -71,4 +71,33 @@ describe("risk kernel", () => {
     expect(d.ok).toBe(true);
     if (d.ok) expect(d.order.sizeUsd).toBeCloseTo(40);
   });
+
+  describe("pre-buy safety gates", () => {
+    it("refuses to buy a flagged honeypot", () => {
+      const d = evaluate(buy("CAKE"), healthy, C, { isHoneypot: true });
+      expect(d.ok).toBe(false);
+      if (!d.ok) expect(d.reason).toMatch(/honeypot/);
+    });
+
+    it("refuses to buy below the DEX liquidity floor", () => {
+      const d = evaluate(buy("CAKE"), healthy, C, { liquidityUsd: 10_000 });
+      expect(d.ok).toBe(false);
+      if (!d.ok) expect(d.reason).toMatch(/liquidity/);
+    });
+
+    it("approves a buy with healthy liquidity and no honeypot flag", () => {
+      const d = evaluate(buy("CAKE"), healthy, C, { isHoneypot: false, liquidityUsd: 1_000_000 });
+      expect(d.ok).toBe(true);
+    });
+
+    it("does not block buys when safety is unverified (fail-open)", () => {
+      expect(evaluate(buy("CAKE"), healthy, C, {}).ok).toBe(true);
+    });
+
+    it("lets a SELL through even when the token is a honeypot (you can always exit)", () => {
+      const sell: Proposal = { ...buy("CAKE"), direction: "sell" };
+      const d = evaluate(sell, healthy, C, { isHoneypot: true, liquidityUsd: 1 });
+      expect(d.ok).toBe(true);
+    });
+  });
 });

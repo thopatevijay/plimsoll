@@ -99,7 +99,10 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
   );
 
   console.log(`[3/5] kernel   → evaluating against constitution`);
-  const decision = evaluate(proposal, portfolio, constitution);
+  const decision = evaluate(proposal, portfolio, constitution, {
+    isHoneypot: bundle.chain.isHoneypot,
+    liquidityUsd: bundle.chain.liquidityUsd,
+  });
 
   const entry: LedgerEntry = { ts: new Date().toISOString(), bundle, proposal, decision };
 

@@ -6,6 +6,17 @@ import type {
   Proposal,
 } from "../types.js";
 
+// Minimum DEX liquidity to enter a token — skip thin pools (slippage / rug risk).
+// Shared with the brain's rule proposer so both layers use one floor.
+export const MIN_LIQUIDITY_USD = 50_000;
+
+/** Pre-buy safety signals read from the live signal bundle (not in the
+ *  constitution — these are runtime chain facts, not policy constants). */
+export interface SafetySignals {
+  isHoneypot?: boolean; // honeypot.is verdict (undefined = unverified → don't block)
+  liquidityUsd?: number; // on-chain DEX liquidity (undefined = unverified → don't block)
+}
+
 // SAFETY LAYER — the deterministic risk kernel. PURE function (no I/O) so it's
 // exhaustively unit-testable and impossible to "talk past" with a prompt. Every
 // order must pass here BEFORE it reaches the signer. This is the guardrail the
@@ -18,6 +29,7 @@ export function evaluate(
   proposal: Proposal,
   portfolio: PortfolioState,
   c: Constitution,
+  safety: SafetySignals = {},
 ): KernelDecision {
   // 0. Fail closed on a corrupt portfolio (NaN/<=0 equity from a bad chain read).
   //    Otherwise NaN slips past every `>=` comparison and DEFEATS the kill-switch.
@@ -28,9 +40,24 @@ export function evaluate(
   // 1. Hold = no-op, trivially fine.
   if (proposal.direction === "hold") return { ok: false, reason: "proposal is hold" };
 
-  // 2. Allowlist — trades outside the 149 eligible tokens do not count.
+  // 2. Allowlist — trades outside the 148 eligible tokens do not count.
   if (!c.allowlist.symbols.includes(proposal.asset)) {
     return { ok: false, reason: `asset ${proposal.asset} not in allowlist` };
+  }
+
+  // 2b. Pre-buy safety gates (BUYS only — you can always exit a position you hold).
+  //     Deterministic backstop to the brain's own checks: even if the proposer is
+  //     talked into a bad entry, no honeypot/thin-pool buy is ever constructed.
+  if (proposal.direction === "buy") {
+    if (safety.isHoneypot === true) {
+      return { ok: false, reason: "honeypot flagged — refusing buy" };
+    }
+    if (safety.liquidityUsd !== undefined && safety.liquidityUsd < MIN_LIQUIDITY_USD) {
+      return {
+        ok: false,
+        reason: `DEX liquidity $${Math.round(safety.liquidityUsd).toLocaleString()} < floor $${MIN_LIQUIDITY_USD.toLocaleString()}`,
+      };
+    }
   }
 
   // 3. Drawdown kill-switch — the hard floor. Trips well below the DQ line.
