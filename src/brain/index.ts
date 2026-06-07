@@ -1,27 +1,31 @@
-import OpenAI from "openai";
-import { z } from "zod";
+import Anthropic from "@anthropic-ai/sdk";
+import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+// zod/v4: the Anthropic structured-output helper is typed against zod v4's core.
+// zod 3.25 ships both APIs side-by-side; the rest of the repo still uses v3 `zod`.
+import { z } from "zod/v4";
 import { config } from "../config.js";
 import { detectRegime } from "../regime/index.js";
 import { ruleProposer } from "./rules.js";
 import { summarize } from "../signals/features.js";
 import type { Proposal, SignalBundle } from "../types.js";
 
-// BRAIN LAYER — the LLM proposes a decision; it NEVER sizes and NEVER signs.
-// Provider-agnostic by design: this is the only file that names a provider, so
-// swapping OpenAI ↔ Anthropic later is a one-file change. We use OpenAI
-// (gpt-4o-mini) — ~$0.38/week, negligible vs the value.
+// BRAIN LAYER — the LLM proposes ONE decision; it NEVER sizes and NEVER signs.
+// This is a single structured-output call, not an agent: Claude returns one
+// schema-validated proposal object and the deterministic kernel does the rest.
+// Provider lives only in this file (Claude, Opus 4.8) — swapping it is one edit.
+// We use adaptive thinking: better regime/conviction reasoning, model-chosen depth.
 
 const SYSTEM_PROMPT = `You are the analysis brain of an autonomous crypto trading agent on BNB Chain.
-Given a market signal bundle, output ONE trade decision as strict JSON:
-{ "regime": "trending"|"chopping"|"risk_off", "asset": string, "direction": "buy"|"sell"|"hold", "conviction": number(0..1), "thesis": string }
-The thesis MUST be falsifiable (state what must be true for this to work).
+Given a market signal bundle, output ONE trade decision matching the required schema:
+{ regime: "trending"|"chopping"|"risk_off", asset: string, direction: "buy"|"sell"|"hold", conviction: number(0..1), thesis: string }
+The thesis MUST be falsifiable (state what must stay true for this to work).
 The input includes 'features' (named signal buckets) and 'detectedRegime' (a deterministic hint) — weigh them, but you may disagree with the hint if the data warrants.
 If the asset is flagged as a honeypot, never propose a buy.
 You do NOT decide position size and you do NOT execute — a deterministic risk kernel does that.`;
 
-// Validate the model's JSON before it touches the rest of the system. A 24/7
-// agent must never crash on a malformed LLM response, so parsing degrades to a
-// safe "hold" rather than throwing.
+// Validate the model's output before it touches the rest of the system. Structured
+// outputs already constrain the shape; we still clamp conviction to [0,1] (the API
+// enforces type, not range) and keep this schema as the single source of truth.
 const ProposalSchema = z.object({
   regime: z.enum(["trending", "chopping", "risk_off"]),
   asset: z.string().min(1),
@@ -30,14 +34,19 @@ const ProposalSchema = z.object({
   thesis: z.string().min(1),
 });
 
+function clamp01(n: number): number {
+  return Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
+}
+
 /** Strict validate + clamp conviction to [0,1]. Throws on invalid shape. */
 export function validateProposal(obj: unknown): Proposal {
   const p = ProposalSchema.parse(obj);
-  return { ...p, conviction: Math.max(0, Math.min(1, p.conviction)) };
+  return { ...p, conviction: clamp01(p.conviction) };
 }
 
-/** Parse raw LLM text into a Proposal; any failure degrades to a safe hold so
- *  the loop survives malformed output. */
+/** Parse raw JSON text into a Proposal; any failure degrades to a safe hold so
+ *  the loop survives malformed output. (Kept as a defensive helper / test seam;
+ *  the live path uses the SDK's schema-validated parse below.) */
 export function parseProposal(raw: string, fallbackAsset: string): Proposal {
   try {
     return validateProposal(JSON.parse(raw));
@@ -59,26 +68,24 @@ export async function propose(bundle: SignalBundle): Promise<Proposal> {
   const features = summarize(bundle);
   const detectedRegime = detectRegime(bundle);
 
-  if (!config.llm.apiKey) {
-    // No LLM key → fall back to the deterministic rule proposer so the full
-    // pipeline (and the learning loop) still runs and makes real decisions.
-    return ruleProposer(bundle);
-  }
+  // No key → deterministic rule proposer so the full pipeline (and the learning
+  // loop) still runs and makes real decisions. Same fallback on any API failure.
+  if (!config.llm.apiKey) return ruleProposer(bundle);
 
   try {
-    const client = new OpenAI({ apiKey: config.llm.apiKey });
-    const res = await client.chat.completions.create({
+    const client = new Anthropic({ apiKey: config.llm.apiKey });
+    const res = await client.messages.parse({
       model: config.llm.model,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content: JSON.stringify({ bundle, features, detectedRegime }) },
-      ],
+      max_tokens: 4096,
+      thinking: { type: "adaptive" },
+      system: SYSTEM_PROMPT,
+      output_config: { format: zodOutputFormat(ProposalSchema) },
+      messages: [{ role: "user", content: JSON.stringify({ bundle, features, detectedRegime }) }],
     });
-    return parseProposal(res.choices[0]?.message?.content ?? "{}", bundle.asset);
+    if (!res.parsed_output) return ruleProposer(bundle); // refusal / unparseable → conservative fallback
+    return validateProposal(res.parsed_output); // re-validate + clamp; mismatch throws → caught below
   } catch {
-    // Provider outage / rate-limit → fall back to the deterministic rule engine
-    // instead of aborting the cycle. The agent keeps deciding (conservatively).
+    // Provider outage / rate-limit → deterministic rule engine instead of aborting.
     return ruleProposer(bundle);
   }
 }

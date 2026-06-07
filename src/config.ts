@@ -19,9 +19,10 @@ function optional(name: string, fallback = ""): string {
 export const config = {
   mode: optional("SENTINEL_MODE", "dev"),
   llm: {
-    provider: optional("LLM_PROVIDER", "openai"),
-    apiKey: optional("OPENAI_API_KEY"), // optional so the tracer bullet runs keyless
-    model: optional("LLM_MODEL", "gpt-4o-mini"),
+    // Anthropic only — the brain is a single structured-output Claude call.
+    // apiKey optional so the agent still runs keyless (falls back to the rule proposer).
+    apiKey: optional("ANTHROPIC_API_KEY"),
+    model: optional("LLM_MODEL", "claude-opus-4-8"),
   },
   cmc: {
     apiKey: optional("CMC_API_KEY"),
