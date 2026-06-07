@@ -148,10 +148,18 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 // errors / a periodic heartbeat are pushed to Telegram (no-op if unconfigured).
 // The USER launches this in live mode (`npm run dev`); it trades autonomously.
 async function runContinuous(): Promise<void> {
-  const watchlist = (process.env.SENTINEL_WATCHLIST ?? "CAKE,BNB,ETH")
+  const requested = (process.env.SENTINEL_WATCHLIST ?? "CAKE,ETH")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+  // Drop anything outside the eligible allowlist up front — otherwise those
+  // assets burn a signal fetch + LLM call every cycle only to be kernel-rejected
+  // (e.g. BNB, the gas token, is not an eligible *trading* asset).
+  const allow = new Set(loadConstitution().allowlist.symbols);
+  const watchlist = requested.filter((s) => allow.has(s));
+  const dropped = requested.filter((s) => !allow.has(s));
+  if (dropped.length) console.log(`[watchlist] dropped (not in allowlist): ${dropped.join(", ")}`);
+  if (!watchlist.length) throw new Error("watchlist empty after allowlist filter — set SENTINEL_WATCHLIST to eligible tokens");
   const intervalMs = envNum("SENTINEL_INTERVAL_MS", 300_000, 1000); // 5 min, min 1s
   await alert("info", `starting (mode=${config.mode}, ${watchlist.length} assets, ${Math.round(intervalMs / 1000)}s cadence)`);
   let i = 0;
