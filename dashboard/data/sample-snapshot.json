@@ -1,0 +1,99 @@
+{
+  "agent": {
+    "name": "SENTINEL",
+    "mode": "live",
+    "wallet": "0xB848C0315997B683F702fd877Ce220293CFda1e5",
+    "agentId": "129312",
+    "registry": "0x8004a169fb4a3325136eb29fa0ceb6d2e539a432",
+    "constitutionHash": "0x7c0af11bda62efaea35892ee53bc6ee926fff1a15b404564183a253b582c152e",
+    "registered": true
+  },
+  "asOf": "2026-06-07T17:30:00.000Z",
+  "cycle": 412,
+  "latestDecision": {
+    "asset": "CAKE",
+    "regime": "risk_off",
+    "direction": "hold",
+    "conviction": 0,
+    "thesis": "Fear & Greed at 14 (extreme fear) with negative funding and market-wide RSI 14 — a risk-off tape, and the June FOMC lands in 10 days. The active sleeve stays flat; capital sits in the survival core. Holds while the regime stays risk-off.",
+    "sizeUsd": 0,
+    "approved": false,
+    "kernelReason": "risk-off — sleeve flat"
+  },
+  "signals": {
+    "cmc": {
+      "priceUsd": 1.2626,
+      "fearGreed": 14,
+      "fundingRate": -0.0027,
+      "rsi": 35.3,
+      "macd": -0.0626,
+      "marketRsi": 14.2,
+      "news": [
+        "EdgeX offers USDC payments after EDGE liquidations spark scrutiny",
+        "How high will Bitcoin get in 2026? | Prediction Markets",
+        "Altcoin rotation stalls as funding turns negative"
+      ],
+      "narratives": ["Binance Ecosystem", "Layer 1", "SEC/CFTC Token Taxonomy", "Real World Assets", "AI Agents"],
+      "macroEvents": ["June FOMC Press Conference (17 June 2026)", "GENIUS Act Final Rule Deadline (18 July 2026)"]
+    },
+    "chain": {
+      "liquidityUsd": 13453690,
+      "dexImbalance": -0.99,
+      "walletFlow": -2226,
+      "isHoneypot": false
+    }
+  },
+  "portfolio": {
+    "equityUsd": 956.65,
+    "peakEquityUsd": 1061.45,
+    "drawdownPct": 9.9,
+    "equityCurve": [
+      { "t": "wk1", "equity": 1000 },
+      { "t": "wk2", "equity": 1024 },
+      { "t": "wk3", "equity": 1061 },
+      { "t": "wk4", "equity": 1043 },
+      { "t": "wk5", "equity": 1018 },
+      { "t": "wk6", "equity": 1031 },
+      { "t": "wk7", "equity": 1007 },
+      { "t": "wk8", "equity": 982 },
+      { "t": "wk9", "equity": 995 },
+      { "t": "wk10", "equity": 971 },
+      { "t": "wk11", "equity": 963 },
+      { "t": "wk12", "equity": 957 }
+    ]
+  },
+  "learning": { "trending": 1.17, "chopping": 1.0, "risk_off": 1.0 },
+  "guardrails": {
+    "allowlist": 148,
+    "perTradePct": 15,
+    "dailyPct": 40,
+    "slippageBps": 100,
+    "liquidityFloorUsd": 50000,
+    "killSwitchPct": 20,
+    "dqPct": 30,
+    "honeypotGate": true
+  },
+  "ledger": [
+    { "ts": "17:30:00", "asset": "CAKE", "regime": "risk_off", "direction": "hold", "conviction": 0, "approved": false, "note": "risk-off — sleeve flat" },
+    { "ts": "17:25:00", "asset": "ETH", "regime": "risk_off", "direction": "hold", "conviction": 0, "approved": false, "note": "risk-off — sleeve flat" },
+    { "ts": "17:20:00", "asset": "CAKE", "regime": "chopping", "direction": "hold", "conviction": 0, "approved": false, "note": "no confirmed edge — standing aside" },
+    { "ts": "13:05:00", "asset": "CAKE", "regime": "trending", "direction": "buy", "conviction": 0.82, "approved": true, "note": "buy $124 — trending, funding≥0, RSI 58" },
+    { "ts": "11:40:00", "asset": "RIVER", "regime": "trending", "direction": "buy", "conviction": 0.7, "approved": false, "note": "VETO: DEX liquidity $21k < $50k floor" },
+    { "ts": "09:15:00", "asset": "ETH", "regime": "trending", "direction": "buy", "conviction": 0.7, "approved": true, "note": "buy $118 — momentum confirmed" }
+  ],
+  "backtest": {
+    "asset": "CAKE",
+    "candles": 329,
+    "buyHoldPct": -47.4,
+    "strategyPct": -4.3,
+    "maxDdPct": 9.9,
+    "trades": 69,
+    "winRatePct": 43
+  },
+  "proof": {
+    "swapTx": "0x4b94b94b9172708fd45bd600203e515d5228703be047d064194ddb4f014d3559",
+    "registerTx": "0xcf4076c59355d685923a1a3c0d7301626258d515a50a6f12bb3481abab9390af",
+    "setMetadataTx": "0x01ebdb614ff922b46fac6a0856d9a5b5732d5790488c0838611cafa645d4ab60",
+    "competeTx": "0xa7d3f9bc6324b2d482b8d1fa4832d93cf85173b801d9bbd34cff7e58ab7a0367"
+  }
+}
