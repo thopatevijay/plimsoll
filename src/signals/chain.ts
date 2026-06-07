@@ -1,4 +1,4 @@
-import { createPublicClient, http, parseAbi, parseAbiItem, zeroAddress } from "viem";
+import { createPublicClient, fallback, http, parseAbi, parseAbiItem, zeroAddress } from "viem";
 import { bsc } from "viem/chains";
 import { config } from "../config.js";
 
@@ -54,7 +54,13 @@ export function computeFlow(
 
 let client: ReturnType<typeof createPublicClient> | undefined;
 function rpc() {
-  if (!client) client = createPublicClient({ chain: bsc, transport: http(config.bsc.rpcUrl) });
+  if (!client) {
+    // Failover: try the primary RPC, fall to the backup on error so a single
+    // provider blip can't blind the agent for the live week. Dedupe so an unset
+    // fallback (== primary default) doesn't add a redundant identical endpoint.
+    const urls = [...new Set([config.bsc.rpcUrl, config.bsc.rpcFallbackUrl].filter(Boolean))];
+    client = createPublicClient({ chain: bsc, transport: fallback(urls.map((u) => http(u))) });
+  }
   return client;
 }
 

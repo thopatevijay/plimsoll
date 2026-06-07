@@ -164,6 +164,9 @@ async function runContinuous(): Promise<void> {
   if (dropped.length) console.log(`[watchlist] dropped (not in allowlist): ${dropped.join(", ")}`);
   if (!watchlist.length) throw new Error("watchlist empty after allowlist filter — set SENTINEL_WATCHLIST to eligible tokens");
   const intervalMs = envNum("SENTINEL_INTERVAL_MS", 300_000, 1000); // 5 min, min 1s
+  if (!config.telegram.botToken || !config.telegram.chatId) {
+    console.log("[ops] Telegram alerts OFF — set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID for live-week pings");
+  }
   await alert("info", `starting (mode=${config.mode}, ${watchlist.length} assets, ${Math.round(intervalMs / 1000)}s cadence)`);
   let i = 0;
   let consecutiveFailures = 0;
@@ -179,9 +182,10 @@ async function runContinuous(): Promise<void> {
     }
     if (i % 12 === 0) await alert("info", `heartbeat — cycle ${i}, watching ${asset}`);
     i++;
-    // Exponential backoff on sustained failure (capped 32×) so a prolonged API
-    // outage doesn't hammer endpoints every interval. Resets on a clean cycle.
-    consecutiveFailures = ok ? 0 : Math.min(consecutiveFailures + 1, 5);
+    // Exponential backoff on sustained failure (capped 16× = ~80 min at the 5-min
+    // cadence) so an API outage doesn't hammer endpoints, but the agent still
+    // recovers within the hour once it's back. Resets on a clean cycle.
+    consecutiveFailures = ok ? 0 : Math.min(consecutiveFailures + 1, 4);
     await sleep(intervalMs * 2 ** consecutiveFailures);
   }
 }

@@ -38,6 +38,9 @@ export const config = {
   // keychain) and signs via the `twak` CLI — keys never enter the agent's env.
   bsc: {
     rpcUrl: optional("BSC_RPC_URL", "https://bsc-dataseed.binance.org"),
+    // Failover endpoint — if the primary RPC blips, chain reads fall over to this
+    // (defaults to the public node; set a 2nd keyed RPC to keep getLogs/flow alive too).
+    rpcFallbackUrl: optional("BSC_RPC_FALLBACK_URL", "https://bsc-dataseed.binance.org"),
     chainId: Number(optional("BSC_CHAIN_ID", "56")),
   },
   telegram: {
