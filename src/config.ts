@@ -33,10 +33,8 @@ export const config = {
     accessId: optional("TWAK_ACCESS_ID"),
     hmacSecret: optional("TWAK_HMAC_SECRET"),
   },
-  wallet: {
-    agentKey: optional("AGENT_PRIVATE_KEY"),
-    x402Key: optional("X402_PRIVATE_KEY"),
-  },
+  // NOTE: no raw private keys here by design. TWAK holds the signing key (OS
+  // keychain) and signs via the `twak` CLI — keys never enter the agent's env.
   bsc: {
     rpcUrl: optional("BSC_RPC_URL", "https://bsc-dataseed.binance.org"),
     chainId: Number(optional("BSC_CHAIN_ID", "56")),
