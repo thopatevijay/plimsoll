@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1010 920" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <style>
+      .title   { font-size: 30px; font-weight: 800; fill: #0F172A; }
+      .subtitle{ font-size: 15px; font-weight: 500; fill: #475569; }
+      .step    { font-size: 19px; font-weight: 800; }
+      .sub     { font-size: 13px; fill: #475569; }
+      .badgenum{ font-size: 14px; font-weight: 800; fill: #FFFFFF; }
+      .loop    { font-size: 13px; font-weight: 700; fill: #E11D48; }
+      .foot    { font-size: 14px; font-weight: 600; fill: #334155; }
+      .mono    { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12.5px; fill: #334155; }
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#94A3B8"/>
+    </marker>
+    <marker id="arrowL" markerWidth="12" markerHeight="12" refX="8" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#E11D48"/>
+    </marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1010" height="920" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="470" y="50" text-anchor="middle" class="title">How SENTINEL runs — one decision cycle</text>
+  <text x="470" y="80" text-anchor="middle" class="subtitle">The AI proposes · the deterministic kernel decides · Trust Wallet signs · the agent learns</text>
+
+  <!-- ===================== STAGE 0 — STATE (slate) ===================== -->
+  <rect x="70" y="116" width="800" height="96" rx="16" fill="#F1F5F9" stroke="#64748B" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="104" cy="164" r="17" fill="#64748B"/>
+  <text x="104" y="169" text-anchor="middle" class="badgenum">0</text>
+  <text x="146" y="154" class="step" fill="#334155">STATE</text>
+  <text x="146" y="178" class="sub">Reads live equity from the chain via the Trust Wallet Agent Kit.</text>
+  <text x="146" y="198" class="sub" fill="#64748B" font-weight="700">In live mode it fails closed if the read fails — it never trades blind.</text>
+
+  <!-- ===================== STAGE 1 — SIGNALS (blue) ===================== -->
+  <rect x="70" y="240" width="800" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="104" cy="288" r="17" fill="#2563EB"/>
+  <text x="104" y="293" text-anchor="middle" class="badgenum">1</text>
+  <text x="146" y="278" class="step" fill="#1D4ED8">SIGNALS</text>
+  <text x="146" y="302" class="sub">CMC: price · funding · Fear &amp; Greed · RSI · MACD  (over MCP, paid per-call via x402)</text>
+  <text x="146" y="322" class="sub">Chain (RPC/viem): DEX liquidity · buy/sell flow · honeypot check</text>
+
+  <!-- ===================== STAGE 2 — BRAIN (purple) ===================== -->
+  <rect x="70" y="364" width="800" height="96" rx="16" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="104" cy="412" r="17" fill="#7C3AED"/>
+  <text x="104" y="417" text-anchor="middle" class="badgenum">2</text>
+  <text x="146" y="402" class="step" fill="#6D28D9">BRAIN  (LLM)</text>
+  <text x="146" y="426" class="mono">{ regime, asset, direction, conviction, thesis }</text>
+  <text x="146" y="446" class="sub" fill="#6D28D9" font-weight="700">conviction × learned-weight-for-that-regime · suggests only — never sizes, never signs</text>
+
+  <!-- ===================== STAGE 3 — KERNEL (green) ===================== -->
+  <rect x="70" y="488" width="800" height="96" rx="16" fill="#ECFDF5" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="104" cy="536" r="17" fill="#059669"/>
+  <text x="104" y="541" text-anchor="middle" class="badgenum">3</text>
+  <text x="146" y="526" class="step" fill="#047857">KERNEL</text>
+  <text x="146" y="550" class="sub">Deterministic gate, in order: allowlist → honeypot → liquidity floor → drawdown kill-switch → daily cap → SIZE</text>
+  <text x="146" y="570" class="sub" fill="#047857" font-weight="700">A pure function — the LLM cannot argue its way past it.</text>
+
+  <!-- ===================== STAGE 4 — EXEC (cyan) ===================== -->
+  <rect x="70" y="612" width="800" height="96" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="104" cy="660" r="17" fill="#0891B2"/>
+  <text x="104" y="665" text-anchor="middle" class="badgenum">4</text>
+  <text x="146" y="650" class="step" fill="#0E7490">EXEC</text>
+  <text x="146" y="674" class="sub">TWAK swap on BNB Chain, signed locally — keys never leave the machine.</text>
+  <text x="146" y="694" class="sub" fill="#94A3B8">(In dev mode this is a dry-run quote — no signing.)</text>
+
+  <!-- ===================== STAGE 5 — LEDGER + LEARN (rose) ===================== -->
+  <rect x="70" y="736" width="800" height="96" rx="16" fill="#FFF1F2" stroke="#E11D48" stroke-width="2" filter="url(#shadow)"/>
+  <circle cx="104" cy="784" r="17" fill="#E11D48"/>
+  <text x="104" y="789" text-anchor="middle" class="badgenum">5</text>
+  <text x="146" y="750" class="step" fill="#BE123C">LEDGER + LEARN</text>
+  <text x="146" y="774" class="sub">Appends the full trace (signals → proposal → decision) — an auditable trail of why.</text>
+  <text x="146" y="794" class="sub" fill="#BE123C" font-weight="700">Later grades the trade (skill vs luck) → adapts the per-regime weights.</text>
+
+  <!-- ===================== DOWN ARROWS ===================== -->
+  <line x1="104" y1="214" x2="104" y2="238" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="104" y1="338" x2="104" y2="362" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="104" y1="462" x2="104" y2="486" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="104" y1="586" x2="104" y2="610" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="104" y1="710" x2="104" y2="734" stroke="#94A3B8" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- ===================== FEEDBACK LOOP (rose, right side) ===================== -->
+  <path d="M 870 784 C 950 716, 950 480, 872 412" fill="none" stroke="#E11D48" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arrowL)"/>
+  <text x="968" y="598" text-anchor="middle" transform="rotate(-90 968 598)" class="loop">↺ every outcome tunes the next decision</text>
+
+  <!-- ===================== FOOTER ===================== -->
+  <text x="470" y="888" text-anchor="middle" class="foot">Every cycle, every asset — the same six stages. One asset every 5 minutes by default.</text>
+</svg>

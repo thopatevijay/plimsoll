@@ -61,24 +61,7 @@ way: the **LLM proposes**, a **deterministic kernel decides and sizes**, and
 
 Every cycle (default: one asset every 5 minutes) runs the same pipe:
 
-```
- [0] STATE     read equity from chain (TWAK)  ── live mode FAILS CLOSED if it
-       │                                          can't read (never trades blind)
-       ▼
- [1] SIGNALS   CMC: price · funding · Fear&Greed · RSI · MACD   (MCP, paid via x402)
-       │       Chain (RPC/viem): DEX liquidity · buy/sell flow · honeypot
-       ▼
- [2] BRAIN     LLM → { regime, asset, direction, conviction, thesis }
-       │       then conviction × learned-weight-for-that-regime    (never sizes/signs)
-       ▼
- [3] KERNEL    deterministic gate, in order: allowlist → honeypot → liquidity floor
-       │       → drawdown kill-switch → daily cap → SIZE the order   (pure function)
-       ▼
- [4] EXEC      TWAK swap, signed locally — keys never leave   (dry-run quote in dev)
-       │
-       ▼
- [5] LEDGER    append the full trace; later grade it (skill vs luck) → adapt weights
-```
+![SENTINEL decision-cycle pipeline](docs/pipeline.svg)
 
 1. **Sees** — boots its equity from chain, then pulls live signals (CMC price +
    funding + Fear & Greed + RSI/MACD, paid via x402) and on-chain DEX liquidity/flow.
