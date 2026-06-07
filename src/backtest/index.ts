@@ -13,9 +13,12 @@ import type { Constitution, SignalBundle } from "../types.js";
 
 export interface BacktestStep {
   bundle: SignalBundle;
-  /** Realized result IF we trade this step (from the caller's price series). */
-  pnlUsd: number;
   thesisHeld: boolean;
+  /** Flat realized $ result if traded (synthetic/legacy path). */
+  pnlUsd?: number;
+  /** Next-period return as a fraction (real path): realized PnL = sizeUsd × returnPctNext.
+   *  Size-aware so the curve actually compounds on real price moves. */
+  returnPctNext?: number;
 }
 
 export interface BacktestResult {
@@ -24,6 +27,7 @@ export interface BacktestResult {
   peakEquityUsd: number;
   maxDrawdownPct: number;
   trades: number;
+  wins: number;
   weights: ConfidenceWeights;
 }
 
@@ -35,6 +39,7 @@ export function runBacktest(
   let portfolio = emptyPortfolio(startEquityUsd);
   let weights = initialWeights();
   let trades = 0;
+  let wins = 0;
   let maxDrawdownPct = 0;
 
   for (const step of steps) {
@@ -44,14 +49,24 @@ export function runBacktest(
 
     if (decision.ok) {
       trades++;
+      // Size-aware realized P&L when a real return series is supplied; else the
+      // flat synthetic figure. "sell" is an exit (no new long PnL); the rule
+      // proposer only emits buy/hold, so approved trades are buys.
+      const sign = decision.order.direction === "buy" ? 1 : -1;
+      const pnlUsd =
+        step.returnPctNext !== undefined
+          ? decision.order.sizeUsd * step.returnPctNext * sign
+          : (step.pnlUsd ?? 0);
+      if (pnlUsd > 0) wins++;
+
       portfolio = applyFill(portfolio, {
         txHash: "sim",
         filledAsset: decision.order.asset,
         filledUsd: decision.order.sizeUsd,
       });
-      portfolio = markEquity(portfolio, portfolio.equityUsd + step.pnlUsd); // realize P&L
+      portfolio = markEquity(portfolio, portfolio.equityUsd + pnlUsd); // realize P&L
       weights = learnFromOutcome(weights, proposal.regime, {
-        pnlUsd: step.pnlUsd,
+        pnlUsd,
         thesisHeld: step.thesisHeld,
       }).weights;
     }
@@ -65,6 +80,7 @@ export function runBacktest(
     peakEquityUsd: portfolio.peakEquityUsd,
     maxDrawdownPct,
     trades,
+    wins,
     weights,
   };
 }
