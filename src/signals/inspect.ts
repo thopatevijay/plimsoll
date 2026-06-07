@@ -14,6 +14,7 @@ const proposal = ruleProposer(bundle);
 
 console.log(`\n🔎 live signals for ${asset}  (${bundle.timestamp})\n`);
 console.log("  raw cmc:", JSON.stringify(bundle.cmc));
+console.log("  chain  :", JSON.stringify(bundle.chain));
 console.log("  features:", JSON.stringify(features));
 console.log(`  detected regime: ${regime}`);
 console.log(`  rule proposer:   ${proposal.direction}` + (proposal.direction !== "hold" ? ` (conviction ${proposal.conviction})` : "") + `  — ${proposal.thesis}\n`);

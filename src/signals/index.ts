@@ -1,5 +1,7 @@
 import { config } from "../config.js";
+import { resolveBscToken } from "../tokens/index.js";
 import { mapFearGreed, mapQuotePrice } from "./cmc.js";
+import { fetchDexLiquidityUsd } from "./chain.js";
 import { fetchMcpSignals, type McpSignals } from "./mcp.js";
 import { fetchX402Price } from "./x402.js";
 import type { SignalBundle } from "../types.js";
@@ -68,5 +70,21 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
   bundle.cmc.fundingRate = mcp.fundingRate;
   bundle.cmc.rsi = mcp.rsi;
   bundle.cmc.macd = mcp.macd;
+
+  // Chain-native: on-chain DEX liquidity for the asset (safety gate). Reads the
+  // PancakeSwap pair directly via RPC; undefined = unverified (caller won't block).
+  try {
+    const [bnbPrice, assetAddr] = await Promise.all([
+      cmcGet("/v2/cryptocurrency/quotes/latest", { symbol: "BNB" })
+        .then((r) => mapQuotePrice(r, "BNB"))
+        .catch(() => undefined),
+      resolveBscToken(asset).catch(() => undefined),
+    ]);
+    if (bnbPrice && assetAddr?.startsWith("0x")) {
+      bundle.chain.liquidityUsd = await fetchDexLiquidityUsd(assetAddr, bnbPrice);
+    }
+  } catch {
+    /* unverified liquidity — leave undefined */
+  }
   return bundle;
 }

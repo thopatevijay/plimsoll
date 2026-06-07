@@ -19,9 +19,9 @@ export interface SignalBundle {
     macd?: number;
   };
   chain: {
-    dexImbalance?: number;
-    liquidityShift?: number;
-    walletFlow?: number;
+    liquidityUsd?: number; // on-chain DEX liquidity (PancakeSwap pair, via RPC) — safety gate
+    dexImbalance?: number; // (future) buy/sell flow from Swap events
+    walletFlow?: number; // (future)
     isHoneypot?: boolean;
   };
   paidViaX402?: boolean; // true if any source was fetched via a paid x402 call
