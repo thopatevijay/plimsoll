@@ -1,127 +1,137 @@
 # SENTINEL
 
-**An autonomous BNB-Chain trading agent that reads the chain natively, pays its
-own way via x402, and learns from every trade — kept inside the rules you set by
-a deterministic risk kernel.**
+**An autonomous BNB-Chain trading agent you can actually let run.** It reads the
+chain natively, pays its own way for data via x402, learns from every trade —
+and a deterministic risk kernel keeps it inside the rules you set, so it
+*physically can't* breach your limits.
 
-Built for **BNB Hack: AI Trading Agent Edition** (CoinMarketCap × Trust Wallet × BNB Chain).
+> Built for **BNB Hack: AI Trading Agent Edition** — CoinMarketCap × Trust Wallet × BNB Chain.
+> Tracks: **1 — Autonomous Trading Agents** · **2 — Strategy Skills**.
 
 ---
 
 ## The problem
 
-Autonomous LLM trading agents are black boxes. You're asked to *trust* one with
-your wallet — but you can't see why it traded, can't audit whether it followed
-your rules, and can't bound the damage. So nobody actually lets one run
-unattended.
+AI trading agents are black boxes. You can't see *why* one trades, can't audit
+whether it followed your rules, and can't bound the damage if it goes wrong. So
+nobody actually lets one run their wallet unattended. The bottleneck isn't
+intelligence — it's **trust, accountability, and not blowing up.**
+
+## The solution
 
 SENTINEL is built to be *run*, not just trusted:
 
-- **Reads the chain natively** — DEX pool imbalance, liquidity shifts, wallet
-  flows, and honeypot checks (CoinMarketCap DEX API), plus funding rates, Fear &
-  Greed, and technicals. Edge from real on-chain state, not a priced-in feed.
-- **Pays its own way** — fetches data per-call via **x402** machine-to-machine
-  micropayments. No API-key plumbing; the agent funds its own data.
-- **Learns live** — every trade is self-graded against its thesis; the outcome
-  updates the confidence weights the brain uses next time. The decision ledger
-  is a watchable thought-stream.
-- **Safe by construction** — a pure, deterministic **risk kernel** enforces a
-  token allowlist, position & slippage limits, and a hard drawdown kill-switch
-  *before anything is signed*. Spot only. Self-custodial signing via the Trust
-  Wallet Agent Kit — keys never leave the machine.
+- **Reads the chain natively** — funding rates, Fear & Greed, and technicals from
+  the CoinMarketCap Agent Hub, **plus on-chain DEX liquidity and buy/sell flow
+  read directly from the PancakeSwap pair** (ground truth, not an aggregate).
+- **Pays its own way** — fetches market data per-call via **x402** micropayments.
+  No API-key plumbing; the agent funds itself, on-chain, one cent at a time.
+- **Learns from every trade** — each decision is graded after a holding window,
+  separating **skill from luck** (did the regime hold, not just the PnL?), and
+  the agent adapts its confidence where it's been right or wrong.
+- **Safe by construction** — the AI only *proposes*. A pure, deterministic **risk
+  kernel** sizes every trade and enforces a token allowlist, per-trade/daily
+  caps, slippage limits, a **hard drawdown kill-switch**, and a DEX-liquidity
+  safety gate — *before anything is signed*. Self-custodial execution via the
+  Trust Wallet Agent Kit; keys never leave the machine.
 
----
+## Why now
 
-## System architecture
+The agent-native crypto stack just arrived — CMC Agent Hub (MCP + x402), the
+Trust Wallet Agent Kit (self-custody signing), and ERC-8004 on-chain identity.
+The plumbing finally exists. What's been missing is an agent that uses it to be
+**accountable and bounded** — one a self-custody user would trust to run
+unattended. That's the gap SENTINEL fills.
 
-![SENTINEL system architecture](docs/architecture.svg)
+## Architecture
 
-<sub>The AI suggests · the deterministic risk kernel decides · Trust Wallet signs (your keys stay local) · the agent learns from every trade.</sub>
+![SENTINEL architecture](docs/architecture.svg)
 
-## The trade loop
+<sub>The AI suggests · the deterministic kernel decides · Trust Wallet signs (keys stay local) · the agent learns from every trade.</sub>
 
-1. **`signals/`** fetches a normalized `SignalBundle` — CMC families (funding,
-   Fear & Greed, technicals) + chain-native (DEX imbalance, wallet flows,
-   honeypot check). At least one source is paid per-call via **x402**.
-2. **`brain/`** (the LLM) proposes one decision — `{ regime, asset, direction,
-   conviction, thesis }` — with a *falsifiable* thesis. It never sizes and never
-   signs.
-3. **`kernel/`** (pure, deterministic) checks the proposal against the
-   committed **constitution**: token allowlist, conviction-scaled sizing within
-   per-trade/daily caps, slippage cap, and a hard drawdown kill-switch. It emits
-   a sized order or a logged rejection.
-4. **`exec/`** executes approved orders via **TWAK** — self-custodial local
-   signing, the sole execution layer. The daily qualifying trade runs as a TWAK
-   `automate` job (native autonomous mode).
-5. **`ledger/`** records the full trace; once the trade resolves it is
-   self-graded and the outcome updates the brain's confidence weights for the
-   next decision.
+## How it works
 
-## Why each integration is load-bearing
+1. **Sees** — boots its equity from chain, then pulls live signals (CMC price +
+   funding + Fear & Greed + RSI/MACD, paid via x402) and on-chain DEX liquidity/flow.
+2. **Decides** — an LLM proposes one trade with a *falsifiable thesis*
+   (`{regime, asset, direction, conviction, thesis}`). It never sizes, never signs.
+3. **Guards** — the risk kernel sizes it, checks the allowlist, limits, slippage,
+   drawdown kill-switch, and DEX-liquidity floor. Out-of-policy → rejected.
+4. **Executes** — approved orders are signed locally and swapped via the Trust
+   Wallet Agent Kit on BNB Chain. Self-custodial, sole execution layer.
+5. **Learns** — after a holding window, the decision is graded (skill vs luck)
+   and the agent's per-regime confidence adapts. The decision ledger records the
+   full trace — a readable, auditable trail of *why*.
 
-- **Trust Wallet Agent Kit** is the *sole* execution layer, used across multiple
-  surfaces — local signing, autonomous (`automate`) mode, and native x402 — not
-  a single swap call. Keys and signing authority stay local end to end.
-- **CoinMarketCap AI Agent Hub** drives every decision: signals via MCP/DEX API,
-  paid per-call via x402, with each trade's memo attributing the signals that
-  triggered it.
-- **BNB AI Agent SDK** registers the agent's **ERC-8004** on-chain identity and
-  commits the hash of its risk constitution before trading — public, accountable.
+## Built on the sponsor stack (each load-bearing)
 
-## Tech stack
+- **Trust Wallet Agent Kit** — the *sole* self-custodial execution layer, used
+  across multiple surfaces: spot swaps, native **x402** data payments, and the
+  daily-qualifier automation. Keys and signing authority stay local end to end.
+- **CoinMarketCap Agent Hub** — drives every decision: signals via **MCP**
+  (funding, sentiment, technicals), paid per-call via **x402**, and the strategy
+  is also published as a **CMC Skill** (`skills/sentinel-strategy/SKILL.md`).
+- **BNB Chain / ERC-8004** — the agent registers an on-chain identity and
+  **commits a hash of its risk constitution**, so the rules it promised to follow
+  are publicly verifiable.
 
-TypeScript · viem · CoinMarketCap AI Agent Hub (MCP + x402) · Trust Wallet Agent
-Kit · BNB AI Agent SDK (ERC-8004) · OpenAI (provider-agnostic brain).
+## The strategy — regime-gated momentum barbell
 
-## Project layout
-
-```
-src/
-  signals/   data + edge layer (CMC + chain-native, x402-paid)
-  brain/     LLM proposer (provider-agnostic; never signs)
-  kernel/    deterministic risk kernel (pure, fully unit-tested)
-  exec/      TWAK adapter — swap / automate / x402 (sole execution)
-  ledger/    append-only decision ledger + learning loop
-  identity/  ERC-8004 identity + constitution commitment
-  agent.ts   the loop
-constitution.json   the committed risk rules
-test/        kernel unit tests
-```
-
-## Run
-
-```bash
-npm install
-cp .env.example .env     # fill in keys (see .env.example)
-npm test                 # unit tests (88, deterministic + offline)
-npm run typecheck        # strict TS
-npm run tracer           # one decision cycle, end to end (real data, dry-run quote)
-npm run signals BNB      # inspect the live signal bundle for a symbol
-npm run backtest         # replay the full loop + learning on a synthetic scenario
-npm run dev              # the unattended live-week runner (SENTINEL_MODE=live to trade)
-```
-
-**Modes:** `SENTINEL_MODE=dev` (default) runs *dry-run-live* — real signals, real
-LLM, real on-chain quotes, but no signing/spend. `SENTINEL_MODE=live` executes
-real swaps + pays for data via x402 (needs a funded wallet).
-
-The risk kernel is the most-tested unit — every limit (allowlist, sizing,
-drawdown kill-switch, conviction scaling) has a test, because it's the floor
-that keeps the agent inside its rules.
+A **survival core** (low-vol, carries the daily-qualifier trade) bounds drawdown;
+an **active sleeve** takes regime-gated momentum trades only when funding,
+sentiment, and technicals confirm — and goes flat in risk-off. A hard drawdown
+kill-switch is the floor. The goal: most return *without blowing up*, net of
+costs, by design (low-churn). The agent then learns which regimes have actually
+worked for it and adjusts conviction accordingly.
 
 ## Two tracks, one strategy
 
-The same regime-gated momentum barbell powers both the live agent (Track 1) and a
-**backtestable CMC Skill** (Track 2): [`skills/sentinel-strategy/SKILL.md`](skills/sentinel-strategy/SKILL.md).
-Inspectable as a Skill, runnable as an autonomous agent.
+The exact same strategy runs two ways: a **live autonomous agent** (Track 1) and
+an inspectable, **backtestable CMC Skill** (Track 2 —
+[`skills/sentinel-strategy/SKILL.md`](skills/sentinel-strategy/SKILL.md)).
 
-## Status
+## Demo
 
-Active build — BNB Hack, June 2026. Full pipeline live end-to-end: chain equity →
-real CMC signals (REST + Agent Hub MCP, x402 pay-per-call) → LLM brain → risk
-kernel → self-custodial TWAK execution → decision ledger → outcome→learning. The
-agent learns from its own track record (per-regime confidence weights) and is
-bounded by a hard drawdown kill-switch.
+📹 *[demo video link]* — pain → live signals → an on-chain x402 data payment →
+the kernel guarding a trade → a self-custodial swap on BSC → the agent learning
+from a loss in real time.
+
+On-chain proof (BNB Smart Chain): a live x402 payment + a self-custodial swap via
+the Trust Wallet Agent Kit. *(tx hashes in the submission.)*
+
+## Run it
+
+```bash
+npm install
+cp .env.example .env       # CMC key (free tier), OpenAI key, TWAK creds, BSC RPC
+npm test                   # 100+ unit tests (deterministic, offline)
+npm run typecheck          # strict TypeScript
+npm run tracer             # one decision cycle, end-to-end (real data, dry-run)
+npm run signals BNB        # inspect the live signal bundle
+npm run backtest           # replay the full loop + learning on a scenario
+npm run constitution       # print the committed risk-rules hash + commit commands
+npm run dev                # the unattended runner (SENTINEL_MODE=live to trade)
+```
+
+**Modes:** `dev` (default) = *dry-run-live* — real signals, real LLM, real
+on-chain quotes, **no signing**. `live` = real swaps + x402 (funded wallet).
+
+## Project layout
+
+`src/signals` (CMC + chain-native + x402) · `src/brain` (LLM + rule fallback) ·
+`src/kernel` (deterministic risk) · `src/exec` (Trust Wallet Agent Kit) ·
+`src/ops` (restart-state, heartbeat, daily caps) · `src/learning` ·
+`src/ledger` · `src/identity` (ERC-8004 + constitution commit) · `agent.ts`.
+
+## Future vision
+
+SENTINEL is the seed of **accountable agentic finance**: an agent whose every
+decision is bounded, auditable, and verifiable on-chain. Roadmap — richer
+on-chain signals (liquidations, wallet-flow clustering), multi-chain via TWAK's
+30+ chains, smart-account-level rule enforcement (a violating tx made
+*unsignable*), and a marketplace where agents publish verifiable track records
+through ERC-8004. The thesis: as agents move real money, *trust* — not raw
+intelligence — becomes the product.
 
 ## License
 
