@@ -140,4 +140,36 @@ describe("risk kernel", () => {
       expect(evaluate(sell(), maxed, C, { regime: "risk_off" }).ok).toBe(true);
     });
   });
+
+  describe("deterministic risk-off flatten (kernel-enforced survival, not LLM-dependent)", () => {
+    const held = (usd: number): PortfolioState => ({ ...healthy, positions: { CAKE: usd } });
+
+    it("force-sells a held position in risk-off even when the brain says HOLD", () => {
+      const d = evaluate({ ...buy("CAKE"), direction: "hold" }, held(300), C, { regime: "risk_off" });
+      expect(d.ok).toBe(true);
+      if (d.ok) {
+        expect(d.order.direction).toBe("sell");
+        expect(d.order.sizeUsd).toBeCloseTo(300);
+      }
+    });
+
+    it("force-sells in risk-off even when the brain proposes a BUY", () => {
+      const d = evaluate(buy("CAKE"), held(300), C, { regime: "risk_off" });
+      expect(d.ok).toBe(true);
+      if (d.ok) expect(d.order.direction).toBe("sell");
+    });
+
+    it("flattens past the drawdown kill-switch (de-risking is never blocked)", () => {
+      const drawn: PortfolioState = { ...held(300), equityUsd: 700, peakEquityUsd: 1000 }; // 30% dd
+      const d = evaluate({ ...buy("CAKE"), direction: "hold" }, drawn, C, { regime: "risk_off" });
+      expect(d.ok).toBe(true);
+      if (d.ok) expect(d.order.direction).toBe("sell");
+    });
+
+    it("when already flat in risk-off, blocks a new long (no position to flatten)", () => {
+      const d = evaluate(buy("CAKE"), healthy, C, { regime: "risk_off" });
+      expect(d.ok).toBe(false);
+      if (!d.ok) expect(d.reason).toMatch(/risk-off/);
+    });
+  });
 });

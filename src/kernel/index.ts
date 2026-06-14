@@ -39,6 +39,25 @@ export function evaluate(
     return { ok: false, reason: "portfolio equity not finite/positive — refusing to trade" };
   }
 
+  // 0b. DETERMINISTIC RISK-OFF FLATTEN — the survival guarantee, ENFORCED BY THE
+  //     KERNEL so it cannot be talked past by the brain. If the detector says
+  //     risk-off and we still hold this asset, exit it regardless of what the brain
+  //     proposed (hold / buy / even a stale sell all collapse to "go flat"). Without
+  //     this, "flat in risk-off" would depend on the LLM choosing to sell — here it
+  //     is a deterministic property of the kernel. De-risking is always allowed, so
+  //     this bypasses the kill-switch and the daily cap like any other exit.
+  if (safety.regime === "risk_off") {
+    const heldUsd = portfolio.positions[proposal.asset] ?? 0;
+    if (heldUsd > 0) {
+      return {
+        ok: true,
+        order: { asset: proposal.asset, direction: "sell", sizeUsd: heldUsd, maxSlippageBps: c.sizing.maxSlippageBps },
+      };
+    }
+    // Flat already — fall through (a buy here is blocked by the risk-off gate below;
+    // a hold/sell with nothing to exit is rejected as usual).
+  }
+
   // 1. Hold = no-op, trivially fine.
   if (proposal.direction === "hold") return { ok: false, reason: "proposal is hold" };
 
