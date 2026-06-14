@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { atomicWriteJson } from "../util/io.js";
+import { atomicWriteJson, statePath } from "../util/io.js";
 
 // Persisted daily trade counters so the kernel's daily-volume cap actually
 // accumulates across cycles AND survives restarts (otherwise reloading the
@@ -12,7 +12,7 @@ interface DailyCounters {
   tradeVolumeTodayUsd: number;
 }
 
-const PATH = "daily.json";
+const PATH = statePath("daily.json");
 const utcDate = (): string => new Date().toISOString().slice(0, 10);
 
 /** Pure: keep stored counters only if they're for `today`, else reset. */

@@ -19,6 +19,9 @@ export function buildSwapArgs(opts: {
   slippageBps: number;
   chain?: string;
   quoteOnly?: boolean;
+  /** Wallet password for headless signing (no OS keychain). Omit for quotes and
+   *  on hosts where twak signs via the keychain. */
+  password?: string;
 }): string[] {
   // Validate at the boundary — a bad size must never reach a live swap.
   if (!Number.isFinite(opts.usd) || opts.usd <= 0) {
@@ -38,6 +41,8 @@ export function buildSwapArgs(opts: {
     "--json",
   ];
   if (opts.quoteOnly) args.push("--quote-only");
+  // Only attach a password for a real (non-quote) swap that actually needs to sign.
+  if (!opts.quoteOnly && opts.password) args.push("--password", opts.password);
   return args;
 }
 

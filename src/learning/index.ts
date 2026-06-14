@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { selfGrade } from "../ledger/index.js";
-import { atomicWriteJson } from "../util/io.js";
+import { atomicWriteJson, statePath } from "../util/io.js";
 import type { Proposal, Regime } from "../types.js";
 
 // THE LEARNING LOOP (the differentiator). The brain proposes with a conviction;
@@ -63,7 +63,7 @@ function clamp(n: number, lo: number, hi: number): number {
 }
 
 // Persistence — weights survive restarts so learning compounds across the week.
-const WEIGHTS_PATH = "weights.json";
+const WEIGHTS_PATH = statePath("weights.json");
 
 export function loadWeights(): ConfidenceWeights {
   if (!existsSync(WEIGHTS_PATH)) return initialWeights();

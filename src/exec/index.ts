@@ -35,6 +35,8 @@ export async function executeSwap(order: SizedOrder): Promise<ExecResult> {
     usd: order.sizeUsd,
     slippageBps: order.maxSlippageBps,
     quoteOnly,
+    // Headless signing (VPS/Railway). Empty on the dev Mac → twak uses the keychain.
+    password: config.twak.walletPassword || undefined,
   });
   const r = await spawnTwak(args);
   if (r?.error) throw new Error(`twak swap: ${r.error}`);

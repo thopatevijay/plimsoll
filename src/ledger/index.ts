@@ -1,4 +1,5 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
+import { statePath } from "../util/io.js";
 import type { LedgerEntry } from "../types.js";
 
 // The DECISION LEDGER — append-only JSONL. The spine of the learning loop, the
@@ -6,7 +7,7 @@ import type { LedgerEntry } from "../types.js";
 // Phase 3 adds: outcome self-grading + per-regime/per-signal weight updates that
 // feed back into the brain's next decision.
 
-const LEDGER_PATH = "ledger.jsonl";
+const LEDGER_PATH = statePath("ledger.jsonl");
 
 // Grade a resolved trade in [-1, 1]. This is what feeds the learning weights.
 // We separate "did we make money" from "was the thesis right" so the agent

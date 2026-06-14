@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { atomicWriteJson } from "../util/io.js";
+import { atomicWriteJson, statePath } from "../util/io.js";
 import type { Direction, Regime } from "../types.js";
 
 // Open-decision tracking for the learning loop. A trade's quality can only be
@@ -20,7 +20,7 @@ export interface OpenPosition {
   openedAt: number; // epoch ms
 }
 
-const PATH = "positions.json";
+const PATH = statePath("positions.json");
 
 export function loadPositions(): OpenPosition[] {
   if (!existsSync(PATH)) return [];

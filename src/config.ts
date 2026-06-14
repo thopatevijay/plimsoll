@@ -33,6 +33,10 @@ export const config = {
   twak: {
     accessId: optional("TWAK_ACCESS_ID"),
     hmacSecret: optional("TWAK_HMAC_SECRET"),
+    // Wallet password for SIGNING on a headless host (VPS/Railway) with no OS
+    // keychain. On the dev Mac this stays empty and twak signs via the keychain;
+    // set it in the deploy env so live swaps can sign unattended.
+    walletPassword: optional("TWAK_WALLET_PASSWORD"),
   },
   // NOTE: no raw private keys here by design. TWAK holds the signing key (OS
   // keychain) and signs via the `twak` CLI — keys never enter the agent's env.

@@ -1,0 +1,14 @@
+node_modules
+dashboard
+.next
+.git
+.env
+*.log
+# Runtime state — must NOT be baked into the image (rebuilt from chain / the volume).
+snapshot.json
+ledger.jsonl
+weights.json
+positions.json
+peak.json
+daily.json
+*.tmp

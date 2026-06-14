@@ -1,5 +1,4 @@
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 import { config } from "../config.js";
 import { constitutionHash } from "../identity/constitution.js";
 import { REFS } from "../identity/refs.js";
@@ -7,7 +6,7 @@ import { MIN_LIQUIDITY_USD } from "../kernel/index.js";
 import { loadWeights } from "../learning/index.js";
 import { readAll } from "../ledger/index.js";
 import { drawdownPct } from "../portfolio/index.js";
-import { atomicWriteJson } from "../util/io.js";
+import { atomicWriteJson, statePath } from "../util/io.js";
 import type { Constitution, LedgerEntry, PortfolioState } from "../types.js";
 
 // Emits the agent-state snapshot the dashboard renders (plimsoll/snapshot.json,
@@ -15,7 +14,7 @@ import type { Constitution, LedgerEntry, PortfolioState } from "../types.js";
 // a snapshot failure must never break the trade loop. Keeps a rolling equity curve
 // across cycles so the dashboard shows a real, growing line.
 
-const SNAPSHOT_PATH = join(process.cwd(), "snapshot.json");
+const SNAPSHOT_PATH = statePath("snapshot.json");
 const CURVE_MAX = 48;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;

@@ -27,6 +27,17 @@ describe("twak command builders (v0.17.0 verified)", () => {
     expect(buildSwapArgs({ from: "USDC", to: "0xCAKE", usd: 90, slippageBps: 50 })).not.toContain("--quote-only");
   });
 
+  it("attaches --password for a live swap on a headless host", () => {
+    const args = buildSwapArgs({ from: "USDC", to: "0xCAKE", usd: 90, slippageBps: 100, password: "s3cret" });
+    expect(args).toContain("--password");
+    expect(args[args.indexOf("--password") + 1]).toBe("s3cret");
+  });
+
+  it("never attaches a password to a quote (quotes don't sign)", () => {
+    const args = buildSwapArgs({ from: "USDC", to: "0xCAKE", usd: 90, slippageBps: 100, quoteOnly: true, password: "s3cret" });
+    expect(args).not.toContain("--password");
+  });
+
   it("maps buy/sell to from/to token ids", () => {
     expect(swapTokensFor(order("buy"), "USDC", "0xCAKE")).toEqual({ from: "USDC", to: "0xCAKE" });
     expect(swapTokensFor(order("sell"), "USDC", "0xCAKE")).toEqual({ from: "0xCAKE", to: "USDC" });

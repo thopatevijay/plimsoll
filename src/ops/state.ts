@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { spawnTwak } from "../exec/index.js";
-import { atomicWriteJson } from "../util/io.js";
+import { atomicWriteJson, statePath } from "../util/io.js";
 import { loadDailyCounters } from "./daily.js";
 import type { PortfolioState } from "../types.js";
 
@@ -27,7 +27,7 @@ export function parseWalletPortfolio(holdings: any): {
   return { equityUsd, positions };
 }
 
-const PEAK_PATH = "peak.json";
+const PEAK_PATH = statePath("peak.json");
 
 function loadPeak(): number {
   if (!existsSync(PEAK_PATH)) return 0;
