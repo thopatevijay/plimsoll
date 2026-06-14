@@ -24,7 +24,7 @@
   <rect x="0" y="0" width="1010" height="920" fill="#F8FAFC"/>
 
   <!-- Title -->
-  <text x="470" y="50" text-anchor="middle" class="title">How SENTINEL runs — one decision cycle</text>
+  <text x="470" y="50" text-anchor="middle" class="title">How PLIMSOLL runs — one decision cycle</text>
   <text x="470" y="80" text-anchor="middle" class="subtitle">The AI proposes · the deterministic kernel decides · Trust Wallet signs · the agent learns</text>
 
   <!-- ===================== STAGE 0 — STATE (slate) ===================== -->

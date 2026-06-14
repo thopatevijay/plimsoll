@@ -1,8 +1,8 @@
-# SENTINEL Skills
+# PLIMSOLL Skills
 
-CMC Agent Hub Skills authored by SENTINEL.
+CMC Agent Hub Skills authored by PLIMSOLL.
 
-- **[sentinel-strategy](sentinel-strategy/SKILL.md)** — the regime-gated momentum
+- **[plimsoll-strategy](plimsoll-strategy/SKILL.md)** — the regime-gated momentum
   barbell strategy as a **backtestable spec** (BNB Hack **Track 2** submission).
 
 ## What this Skill does
@@ -11,7 +11,7 @@ Most "AI strategy" output is an unfalsifiable vibe. This Skill turns live
 CoinMarketCap signals into a **precise, parameterized spec you can backtest**:
 every decision states the regime it assumes, the rule that fired, the size the
 risk model allows, and a **falsifiable thesis** (what must stay true for it to
-work). It is the *same* strategy the live SENTINEL agent (Track 1) executes —
+work). It is the *same* strategy the live PLIMSOLL agent (Track 1) executes —
 one strategy, inspectable as a Skill and runnable as an autonomous agent.
 
 ## Example: signals in → strategy spec out
@@ -44,12 +44,12 @@ npm run backtest   # in the repo root — prints equity curve, max drawdown,
                    # trade count, and the learned per-regime weights
 ```
 
-See **[sentinel-strategy/SKILL.md](sentinel-strategy/SKILL.md)** for the full
+See **[plimsoll-strategy/SKILL.md](plimsoll-strategy/SKILL.md)** for the full
 workflow (signal gathering, the deterministic regime classifier, the risk
 constitution, and the skill-vs-luck grading that adapts conviction).
 
 ## Install
 
 Copy the skill folder into a CMC-MCP-connected agent's skills directory, then
-invoke it by name (`sentinel-strategy`). It uses only CMC Agent Hub MCP tools
+invoke it by name (`plimsoll-strategy`). It uses only CMC Agent Hub MCP tools
 (declared in the skill's `allowed-tools`).

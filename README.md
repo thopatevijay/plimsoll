@@ -1,4 +1,4 @@
-# SENTINEL
+# PLIMSOLL
 
 **An autonomous BNB-Chain trading agent you can actually let run.** It reads the
 chain natively, pays its own way for data via x402, learns from every trade —
@@ -19,7 +19,7 @@ intelligence — it's **trust, accountability, and not blowing up.**
 
 ## The solution
 
-SENTINEL is built to be *run*, not just trusted:
+PLIMSOLL is built to be *run*, not just trusted:
 
 - **Reads the chain natively** — funding rates, Fear & Greed, and technicals from
   the CoinMarketCap Agent Hub, **plus on-chain DEX liquidity and buy/sell flow
@@ -42,11 +42,11 @@ The agent-native crypto stack just arrived — CMC Agent Hub (MCP + x402), the
 Trust Wallet Agent Kit (self-custody signing), and ERC-8004 on-chain identity.
 The plumbing finally exists. What's been missing is an agent that uses it to be
 **accountable and bounded** — one a self-custody user would trust to run
-unattended. That's the gap SENTINEL fills.
+unattended. That's the gap PLIMSOLL fills.
 
 ## Architecture
 
-![SENTINEL architecture](docs/architecture.svg)
+![PLIMSOLL architecture](docs/architecture.svg)
 
 <sub>The AI suggests · the deterministic kernel decides · Trust Wallet signs (keys stay local) · the agent learns from every trade.</sub>
 
@@ -55,13 +55,13 @@ unattended. That's the gap SENTINEL fills.
 The whole design rests on one idea: **the part that's creative is not the part
 that's trusted.** Think of a trading desk — a *junior analyst* pitches ideas, a
 *risk officer* can veto any pitch and sets the real size, and a *custodian* signs
-the cheque. The analyst never touches the checkbook. SENTINEL is built the same
+the cheque. The analyst never touches the checkbook. PLIMSOLL is built the same
 way: the **LLM proposes**, a **deterministic kernel decides and sizes**, and
 **Trust Wallet signs**. The LLM's worst idea still cannot breach a limit.
 
 Every cycle (default: one asset every 5 minutes) runs the same pipe:
 
-![SENTINEL decision-cycle pipeline](docs/pipeline.svg)
+![PLIMSOLL decision-cycle pipeline](docs/pipeline.svg)
 
 1. **Sees** — boots its equity from chain, then pulls live signals (CMC price +
    funding + Fear & Greed + RSI/MACD, paid via x402) and on-chain DEX liquidity/flow.
@@ -150,7 +150,7 @@ cannot argue its way past any of these — they're a pure function.
   daily-qualifier automation. Keys and signing authority stay local end to end.
 - **CoinMarketCap Agent Hub** — drives every decision: signals via **MCP**
   (funding, sentiment, technicals), paid per-call via **x402**, and the strategy
-  is also published as a **CMC Skill** (`skills/sentinel-strategy/SKILL.md`).
+  is also published as a **CMC Skill** (`skills/plimsoll-strategy/SKILL.md`).
 - **BNB Chain / ERC-8004** — the agent registers an on-chain identity and
   **commits a hash of its risk constitution**, so the rules it promised to follow
   are publicly verifiable.
@@ -165,7 +165,7 @@ costs, by design (low-churn). The agent then learns which regimes have actually
 worked for it and adjusts conviction accordingly.
 
 **Backtest evidence** (`npm run backtest`, ~329 real daily candles from Binance, a
-bearish window): where buy-and-hold **CAKE fell −47%** and **ETH −45%**, SENTINEL
+bearish window): where buy-and-hold **CAKE fell −47%** and **ETH −45%**, PLIMSOLL
 held **−4.3%** and **−3.8%** with **max drawdown under 10%** — the survival thesis
 on real data. (Down-trending window shows the defensive side; upside capture shows
 in trending-up windows.)
@@ -174,7 +174,7 @@ in trending-up windows.)
 
 The exact same strategy runs two ways: a **live autonomous agent** (Track 1) and
 an inspectable, **backtestable CMC Skill** (Track 2 —
-[`skills/sentinel-strategy/SKILL.md`](skills/sentinel-strategy/SKILL.md)).
+[`skills/plimsoll-strategy/SKILL.md`](skills/plimsoll-strategy/SKILL.md)).
 
 ## Demo
 
@@ -202,7 +202,7 @@ npm run tracer             # one decision cycle, end-to-end (real data, dry-run)
 npm run signals            # inspect the live signal bundle (CAKE)
 npm run backtest [SYMBOL]  # replay the full loop on REAL Binance daily candles
 npm run constitution 129312 # verify the on-chain risk-rules hash matches local
-npm run dev                # the unattended runner (SENTINEL_MODE=live to trade)
+npm run dev                # the unattended runner (PLIMSOLL_MODE=live to trade)
 ```
 
 **Modes:** `dev` (default) = *dry-run-live* — real signals, real LLM, real
@@ -218,7 +218,7 @@ on-chain quotes, **no signing**. `live` = real swaps + x402 (funded wallet).
 
 ## Future vision
 
-SENTINEL is the seed of **accountable agentic finance**: an agent whose every
+PLIMSOLL is the seed of **accountable agentic finance**: an agent whose every
 decision is bounded, auditable, and verifiable on-chain. Roadmap — richer
 on-chain signals (liquidations, wallet-flow clustering), multi-chain via TWAK's
 30+ chains, smart-account-level rule enforcement (a violating tx made

@@ -27,7 +27,7 @@ function envNum(name: string, def: number, min: number): number {
 
 // How long a decision is held before we grade it (and learn). Configurable so a
 // demo can set it short (e.g. 60000) and watch the agent adapt quickly.
-const HOLD_MS = envNum("SENTINEL_HOLD_MS", 3_600_000, 0); // 1h default
+const HOLD_MS = envNum("PLIMSOLL_HOLD_MS", 3_600_000, 0); // 1h default
 // Hard cap so an open decision that's never re-priced can't grow positions.json
 // forever (e.g. its asset was removed from the watchlist mid-week).
 const MAX_POSITION_AGE_MS = Math.max(HOLD_MS * 6, 12 * 3_600_000);
@@ -154,7 +154,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 // errors / a periodic heartbeat are pushed to Telegram (no-op if unconfigured).
 // The USER launches this in live mode (`npm run dev`); it trades autonomously.
 async function runContinuous(): Promise<void> {
-  const requested = (process.env.SENTINEL_WATCHLIST ?? "CAKE,ETH")
+  const requested = (process.env.PLIMSOLL_WATCHLIST ?? "CAKE,ETH")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
@@ -165,8 +165,8 @@ async function runContinuous(): Promise<void> {
   const watchlist = requested.filter((s) => allow.has(s));
   const dropped = requested.filter((s) => !allow.has(s));
   if (dropped.length) console.log(`[watchlist] dropped (not in allowlist): ${dropped.join(", ")}`);
-  if (!watchlist.length) throw new Error("watchlist empty after allowlist filter — set SENTINEL_WATCHLIST to eligible tokens");
-  const intervalMs = envNum("SENTINEL_INTERVAL_MS", 300_000, 1000); // 5 min, min 1s
+  if (!watchlist.length) throw new Error("watchlist empty after allowlist filter — set PLIMSOLL_WATCHLIST to eligible tokens");
+  const intervalMs = envNum("PLIMSOLL_INTERVAL_MS", 300_000, 1000); // 5 min, min 1s
   if (!config.telegram.botToken || !config.telegram.chatId) {
     console.log("[ops] Telegram alerts OFF — set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID for live-week pings");
   }

@@ -1,6 +1,6 @@
 {
   "agent": {
-    "name": "SENTINEL",
+    "name": "PLIMSOLL",
     "mode": "live",
     "wallet": "0xB848C0315997B683F702fd877Ce220293CFda1e5",
     "agentId": "129312",

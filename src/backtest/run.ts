@@ -35,7 +35,7 @@ try {
   if (steps.length < 30) throw new Error(`too few candles for ${symbol} (${steps.length})`);
   const r = runBacktest(steps, c, START_EQUITY);
   const bh = buyHoldReturnPct(closes);
-  report(`SENTINEL backtest — ${symbol}/USDT, ${steps.length} real daily candles (Binance)`, r, () => {
+  report(`PLIMSOLL backtest — ${symbol}/USDT, ${steps.length} real daily candles (Binance)`, r, () => {
     console.log(`  benchmark:      buy & hold ${symbol} = ${bh >= 0 ? "+" : ""}${bh.toFixed(1)}% over the window`);
     console.log("  note:           RSI/MACD from real closes; F&G proxied from momentum, funding neutral (no free history)");
   });
@@ -53,7 +53,7 @@ try {
     ...synth(4, TREND, 18, true),
   ];
   const r = runBacktest(scenario, c, START_EQUITY);
-  report("SENTINEL backtest (synthetic, keyless)", r, () => {
+  report("PLIMSOLL backtest (synthetic, keyless)", r, () => {
     console.log(`  days:           ${scenario.length}  (risk-off days correctly skipped)`);
   });
 }

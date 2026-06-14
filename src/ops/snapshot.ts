@@ -10,7 +10,7 @@ import { drawdownPct } from "../portfolio/index.js";
 import { atomicWriteJson } from "../util/io.js";
 import type { Constitution, LedgerEntry, PortfolioState } from "../types.js";
 
-// Emits the agent-state snapshot the dashboard renders (sentinel/snapshot.json,
+// Emits the agent-state snapshot the dashboard renders (plimsoll/snapshot.json,
 // read by ../snapshot.json from the dashboard). Written every cycle, best-effort:
 // a snapshot failure must never break the trade loop. Keeps a rolling equity curve
 // across cycles so the dashboard shows a real, growing line.
@@ -58,7 +58,7 @@ export function writeSnapshot(entry: LedgerEntry, portfolio: PortfolioState, c: 
 
     const snap = {
       agent: {
-        name: "SENTINEL",
+        name: "PLIMSOLL",
         mode: config.mode === "live" ? "live" : "dev",
         wallet: REFS.wallet,
         agentId: REFS.agentId,

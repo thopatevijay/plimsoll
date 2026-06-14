@@ -10,7 +10,7 @@ export type AlertLevel = "info" | "warn" | "error";
 /** Pure: format an alert line. */
 export function formatAlert(level: AlertLevel, msg: string, ts: string): string {
   const icon = level === "error" ? "🔴" : level === "warn" ? "🟠" : "🟢";
-  return `${icon} [SENTINEL ${ts}] ${msg}`;
+  return `${icon} [PLIMSOLL ${ts}] ${msg}`;
 }
 
 export async function alert(level: AlertLevel, msg: string): Promise<void> {

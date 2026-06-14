@@ -9,7 +9,7 @@ const hash = constitutionHash();
 if (!agentId) {
   console.log(`\nConstitution hash: ${hash}\n`);
   console.log("Commit it on-chain (you run these — fund-moving, signs with your wallet):");
-  console.log("  1) twak erc8004 register --uri https://github.com/thopatevijay/sentinel --chain bsc");
+  console.log("  1) twak erc8004 register --uri https://github.com/thopatevijay/plimsoll --chain bsc");
   console.log("     → note the returned agentId");
   console.log(`  2) twak ${buildSetConstitutionArgs("<agentId>", hash).join(" ")}`);
   console.log("\nThen verify:  npm run constitution <agentId>\n");

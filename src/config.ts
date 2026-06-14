@@ -17,7 +17,7 @@ function optional(name: string, fallback = ""): string {
 }
 
 export const config = {
-  mode: optional("SENTINEL_MODE", "dev"),
+  mode: optional("PLIMSOLL_MODE", "dev"),
   llm: {
     // Anthropic only — the brain is a single structured-output Claude call.
     // apiKey optional so the agent still runs keyless (falls back to the rule proposer).

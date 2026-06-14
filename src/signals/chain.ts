@@ -12,7 +12,7 @@ const WBNB = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c";
 const PANCAKE_V2_FACTORY = "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73";
 // Swap-event lookback. Public RPCs cap getLogs ranges aggressively; a paid RPC
 // (live week) handles larger windows. Configurable; default modest.
-const FLOW_BLOCKS = BigInt(Number(process.env.SENTINEL_FLOW_BLOCKS ?? 500));
+const FLOW_BLOCKS = BigInt(Number(process.env.PLIMSOLL_FLOW_BLOCKS ?? 500));
 
 const FACTORY_ABI = parseAbi(["function getPair(address,address) view returns (address)"]);
 const PAIR_ABI = parseAbi([

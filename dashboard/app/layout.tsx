@@ -21,9 +21,9 @@ const sans = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SENTINEL — autonomous BNB-Chain trader you can let run",
+  title: "PLIMSOLL — autonomous BNB-Chain trader you can let run",
   description:
-    "Live command console for SENTINEL: the AI proposes, a deterministic kernel decides, Trust Wallet signs, and the agent learns — bounded and verifiable on-chain.",
+    "Live command console for PLIMSOLL: the AI proposes, a deterministic kernel decides, Trust Wallet signs, and the agent learns — bounded and verifiable on-chain.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -31,7 +31,7 @@ export async function fetchMcpSignals(symbol: string): Promise<McpSignals> {
   const transport = new StreamableHTTPClientTransport(new URL(config.cmc.mcpUrl), {
     requestInit: { headers: { "X-CMC-MCP-API-KEY": config.cmc.apiKey } },
   });
-  const client = new Client({ name: "sentinel", version: "0.1.0" });
+  const client = new Client({ name: "plimsoll", version: "0.1.0" });
 
   const callJson = async (name: string, args: Record<string, unknown>): Promise<unknown> => {
     const res = (await client.callTool({ name, arguments: args })) as {

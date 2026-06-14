@@ -21,7 +21,7 @@ export async function spawnTwak(args: string[]): Promise<any> {
 // EXECUTION LAYER — TWAK is the sole path (R3). In any non-"live" mode we run
 // `--quote-only`: a REAL twak call against the live 0x aggregator that returns a
 // quote WITHOUT signing or spending — the "dry-run-live" path that lets the whole
-// agent run end-to-end on real data with zero risk. Set SENTINEL_MODE=live (with
+// agent run end-to-end on real data with zero risk. Set PLIMSOLL_MODE=live (with
 // a funded wallet + password in keychain/TWAK_WALLET_PASSWORD) to actually trade.
 export async function executeSwap(order: SizedOrder): Promise<ExecResult> {
   const quoteOnly = config.mode !== "live";

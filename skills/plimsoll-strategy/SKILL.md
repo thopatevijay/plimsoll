@@ -1,5 +1,5 @@
 ---
-name: sentinel-strategy
+name: plimsoll-strategy
 description: Generate a regime-gated momentum trading strategy for BNB-Chain assets from live CoinMarketCap data, emitted as a backtestable spec with explicit entry/exit rules, a barbell risk allocation, a hard drawdown kill-switch, and a falsifiable thesis per trade. Use when asked to produce, explain, or backtest a crypto trading strategy from market signals.
 license: MIT
 compatibility: ">=1.0.0"
@@ -12,10 +12,10 @@ allowed-tools:
   - search_cryptos
 ---
 
-# SENTINEL Strategy Skill
+# PLIMSOLL Strategy Skill
 
 Turn live CoinMarketCap signals into a **backtestable trading strategy** for BNB
-Chain. This is the strategy brain of the SENTINEL agent, authored as a Skill so
+Chain. This is the strategy brain of the PLIMSOLL agent, authored as a Skill so
 its logic can be inspected, backtested, and reproduced independently of any
 live-execution layer.
 
@@ -34,7 +34,7 @@ The strategy is a **regime-gated momentum barbell**:
 ## When to use
 
 - "Generate a trading strategy for \<asset\> from current market data."
-- "What would SENTINEL do on \<asset\> right now, and why?"
+- "What would PLIMSOLL do on \<asset\> right now, and why?"
 - "Give me a backtestable spec for a regime-gated momentum strategy."
 
 ## Prerequisites
@@ -125,13 +125,13 @@ Emit this object (the spec a backtester consumes):
 The spec is deterministic, so it backtests directly: replay historical daily
 OHLCV through steps 2–5 and accumulate equity. Report **total return, max
 drawdown, trade count, win rate, and the learned regime weights**. The reference
-harness — `npm run backtest [SYMBOL]` in the SENTINEL repo — does exactly this over
+harness — `npm run backtest [SYMBOL]` in the PLIMSOLL repo — does exactly this over
 **real daily candles from free Binance klines** (RSI/MACD from real closes; F&G
 proxied from momentum where free history lacks it), versus a buy-and-hold benchmark.
 
 **Evidence (≈329 real daily candles, a bearish window):**
 
-| Asset | Buy & hold | SENTINEL | Max drawdown |
+| Asset | Buy & hold | PLIMSOLL | Max drawdown |
 |---|---|---|---|
 | CAKE | −47.4% | **−4.3%** | 9.9% |
 | ETH | −45.1% | **−3.8%** | 5.7% |
@@ -154,5 +154,5 @@ A missing signal must never crash the decision — degrade gracefully:
 
 This skill is intentionally conservative and low-churn (the daily-trade minimum
 is met by the survival core, not by over-trading the sleeve). It is the same
-strategy the SENTINEL live agent executes — one strategy, inspectable as a Skill
+strategy the PLIMSOLL live agent executes — one strategy, inspectable as a Skill
 and runnable as an autonomous agent.

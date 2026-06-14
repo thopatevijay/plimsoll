@@ -11,7 +11,7 @@ const config: Config = {
         hair: "#1E2A26", // hairline borders
         fog: "#8A968F", // muted text
         bone: "#E9EFEA", // primary text
-        signal: "#B8FF3C", // SENTINEL lime — live/active accent
+        signal: "#B8FF3C", // PLIMSOLL lime — live/active accent
         trend: "#5DD39E", // regime: trending
         chop: "#E8B84B", // regime: chopping
         risk: "#E8635D", // regime: risk_off / danger

@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import type { Regime, Snapshot } from "@/lib/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SENTINEL Command — instrument-grade console. The AI proposes, the deterministic
+// PLIMSOLL Command — instrument-grade console. The AI proposes, the deterministic
 // kernel decides, Trust Wallet signs, the agent learns. Bounded + verifiable.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -405,7 +405,7 @@ function Backtest({ snap }: { snap: Snapshot }) {
         {b.candles} real daily candles · {b.asset}/USDT · {b.trades} trades · {b.winRatePct}% win
       </div>
       {bar(`buy & hold ${b.asset}`, b.buyHoldPct, "#E8635D")}
-      {bar("SENTINEL", b.strategyPct, "#B8FF3C")}
+      {bar("PLIMSOLL", b.strategyPct, "#B8FF3C")}
       <div className="font-mono text-[10px] leading-relaxed text-fog/70">
         max drawdown {b.maxDdPct}% — survived a {Math.abs(b.buyHoldPct).toFixed(0)}% market drop. Most return{" "}
         <span className="text-signal">without blowing up.</span>
@@ -452,7 +452,7 @@ function StatusBar({ snap, live }: { snap: Snapshot; live: boolean }) {
       className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-3 border-b border-hair bg-ink/80 px-5 py-3 backdrop-blur-md"
     >
       <div className="flex items-center gap-3">
-        <span className="font-display text-xl font-bold tracking-[0.2em] text-bone">SENTINEL</span>
+        <span className="font-display text-xl font-bold tracking-[0.2em] text-bone">PLIMSOLL</span>
         <span className="hidden font-mono text-[10px] uppercase tracking-widest text-fog sm:inline">
           autonomous BNB-chain trader
         </span>

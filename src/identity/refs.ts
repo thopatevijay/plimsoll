@@ -1,4 +1,4 @@
-// Public, verifiable on-chain references for SENTINEL (BSC mainnet). These are
+// Public, verifiable on-chain references for PLIMSOLL (BSC mainnet). These are
 // facts anyone can check on bscscan — safe to commit. Consumed by the live
 // snapshot the dashboard renders. (Wallet/agentId/registry/txs come from the
 // registration done in setup; see .dev-refs.md.)

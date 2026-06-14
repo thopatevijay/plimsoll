@@ -1,6 +1,6 @@
-# SENTINEL Command — dashboard
+# PLIMSOLL Command — dashboard
 
-The live command console for [SENTINEL](../README.md): the AI proposes, a
+The live command console for [PLIMSOLL](../README.md): the AI proposes, a
 deterministic kernel decides, Trust Wallet signs, and the agent learns — rendered
 as an instrument-grade dashboard. Next.js + Tailwind + Motion.
 
@@ -30,11 +30,11 @@ npm run dev        # http://localhost:3939
 
 The page reads an agent **state snapshot**, in this order:
 
-1. `SENTINEL_SNAPSHOT` env var (absolute path), else
+1. `PLIMSOLL_SNAPSHOT` env var (absolute path), else
 2. `../snapshot.json` (the file the running agent emits each cycle), else
 3. the bundled `data/sample-snapshot.json` (so it's stunning out of the box).
 
-The running agent writes `sentinel/snapshot.json` every cycle (see
+The running agent writes `plimsoll/snapshot.json` every cycle (see
 `src/ops/snapshot.ts`), so a dashboard hosted next to the agent shows **live state**
 (the page is `force-dynamic` and re-reads per request).
 
@@ -42,12 +42,12 @@ The running agent writes `sentinel/snapshot.json` every cycle (see
 
 ```bash
 # from this dashboard/ directory
-vercel            # or connect the repo in the Vercel dashboard, root = sentinel/dashboard
+vercel            # or connect the repo in the Vercel dashboard, root = plimsoll/dashboard
 ```
 
 On Vercel there's no agent file present, so it renders the bundled sample snapshot
 (a faithful, polished demo). For a *live* public dashboard, host it on the same box
-as the agent (or point `SENTINEL_SNAPSHOT` at a synced snapshot) so it reads real
+as the agent (or point `PLIMSOLL_SNAPSHOT` at a synced snapshot) so it reads real
 state. `npm run build && npm start` serves it in production mode on port 3939.
 
 ## Stack

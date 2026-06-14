@@ -26,7 +26,7 @@
   <rect x="0" y="0" width="1120" height="700" fill="#F8FAFC"/>
 
   <!-- Title -->
-  <text x="560" y="48" text-anchor="middle" class="title">SENTINEL</text>
+  <text x="560" y="48" text-anchor="middle" class="title">PLIMSOLL</text>
   <text x="560" y="78" text-anchor="middle" class="subtitle">An autonomous AI trader on BNB Chain — that stays inside the rules you set</text>
 
   <!-- ===================== INPUTS (top) ===================== -->
