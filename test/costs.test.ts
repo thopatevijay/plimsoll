@@ -9,23 +9,24 @@ import {
 
 describe("simulated tx-cost model", () => {
   it("one-way cost = proportional fee+slippage + fixed gas", () => {
-    // $1000 notional @ (25+15)=40 bps = $4.00 + $0.20 gas = $4.20
-    expect(oneWaySwapCostUsd(1000)).toBeCloseTo(4.2, 6);
+    // $1000 notional @ (50+20)=70 bps = $7.00 + $0.20 gas = $7.20
+    expect(oneWaySwapCostUsd(1000)).toBeCloseTo(7.2, 6);
   });
 
   it("round-trip is exactly two legs (enter + exit)", () => {
     expect(roundTripCostUsd(1000)).toBeCloseTo(2 * oneWaySwapCostUsd(1000), 6);
-    expect(roundTripCostUsd(1000)).toBeCloseTo(8.4, 6);
+    expect(roundTripCostUsd(1000)).toBeCloseTo(14.4, 6);
   });
 
   it("fixed gas dominates on tiny trades (hurts small notionals most)", () => {
-    // $5 trade: 40 bps = $0.02 proportional, but $0.20 gas → break-even ~8.8%
+    // $5 trade: 70 bps = $0.035 proportional, but $0.20 gas → break-even ~9.4%
     expect(breakEvenReturnPct(5)).toBeGreaterThan(8);
   });
 
-  it("break-even shrinks toward the proportional floor as size grows", () => {
-    // Large trade → gas negligible → ~2*40bps = 0.8% round-trip floor.
-    expect(breakEvenReturnPct(1_000_000)).toBeCloseTo(0.8, 1);
+  it("matches the measured ~1.4% round-trip floor as size grows", () => {
+    // Large trade → gas negligible → ~2*70bps = 1.4% round-trip floor
+    // (community-measured TWAK round-trip on ETH/USDT, BNB Hack TG 2026-06-14).
+    expect(breakEvenReturnPct(1_000_000)).toBeCloseTo(1.4, 1);
   });
 
   it("guards non-finite / non-positive sizes", () => {

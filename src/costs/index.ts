@@ -2,18 +2,26 @@ import type { Constitution } from "../types.js";
 
 // SIMULATED TRANSACTION-COST MODEL.
 //
-// The competition scores net on-chain % return and notes that "simulated tx costs
-// apply" — but the organizers have NOT yet published the exact model (Stefano:
-// "don't calibrate break-even yet, confirming"). So this lives OUTSIDE the on-chain
-// constitution (it is not a risk rule the kernel enforces, and we don't want to
-// re-commit the constitution hash every time we recalibrate). It is a pure,
-// env-tunable estimate used to keep the backtest HONEST and to quantify churn drag.
+// TWO costs exist and they are NOT the same:
+//   1. The REAL live-execution cost the wallet pays per round-trip swap through the
+//      TWAK interface. MEASURED at ~1.4% round-trip (pool spread + provider fee +
+//      slippage; BSC gas adds only ~0.01–0.3%) across 12 quote samples on ETH/USDT,
+//      flat from 0.1–10 ETH (community measurement, BNB Hack TG, 2026-06-14).
+//   2. The SCORING simulated cost the judges apply for ranking — NOT yet published.
+//      Stefano (organizer): "scoring uses simulated transaction costs, not live TWAK
+//      quotes. Don't calibrate your break-even to the ~1.4% you measured until we
+//      confirm the cost model." So we do NOT hard-gate on break-even (see 2.4).
 //
-// Defaults are deliberately conservative for a TWAK spot swap on BSC:
-//   - swapFeeBps 25     PancakeSwap-style 0.25% pool fee (the dominant cost).
-//   - estSlippageBps 15 conservative effective slippage; we already gate liquidity
-//                       >= $50k and cap max slippage at 100 bps, so 0.15% is realistic.
-//   - fixedGasUsd 0.20  ~BSC gas per swap; fixed-$, so it bites small trades hardest.
+// This model lives OUTSIDE the on-chain constitution (it is a recalibration estimate,
+// not a committed risk rule — so the constitution hash is never disturbed by tuning
+// it) and is fully env-tunable. Defaults are grounded in the measured live cost so
+// the backtest honestly reflects what real capital will lose during the live week;
+// override via env to swap in the official scoring model once organizers publish it.
+//   - swapFeeBps 50     TWAK provider fee + AMM pool spread (the dominant cost).
+//   - estSlippageBps 20 effective slippage; we gate liquidity >= $50k and cap max
+//                       slippage at 100 bps. 50+20 = 70 bps/leg → ~1.4% round-trip.
+//   - fixedGasUsd 0.20  ~BSC gas per swap (the measured 0.01–0.3%); fixed-$, so it
+//                       bites small trades hardest.
 export interface CostModel {
   swapFeeBps: number;
   estSlippageBps: number;
@@ -21,8 +29,8 @@ export interface CostModel {
 }
 
 export const DEFAULT_COST_MODEL: CostModel = {
-  swapFeeBps: 25,
-  estSlippageBps: 15,
+  swapFeeBps: 50,
+  estSlippageBps: 20,
   fixedGasUsd: 0.2,
 };
 
