@@ -76,9 +76,10 @@ export interface Snapshot {
     asset: string;
     candles: number;
     buyHoldPct: number;
-    strategyPct: number;
+    strategyPct: number; // net of the simulated tx-cost model
+    grossPct: number; // pre-cost, for the honest gross-vs-net comparison
     maxDdPct: number;
-    trades: number;
+    trades: number; // completed round-trips (low-churn: hold-through-trend)
     winRatePct: number;
   };
   proof: {

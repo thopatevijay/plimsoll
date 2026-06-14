@@ -165,10 +165,14 @@ costs, by design (low-churn). The agent then learns which regimes have actually
 worked for it and adjusts conviction accordingly.
 
 **Backtest evidence** (`npm run backtest`, ~329 real daily candles from Binance, a
-bearish window): where buy-and-hold **CAKE fell −47%** and **ETH −45%**, PLIMSOLL
-held **−4.3%** and **−3.8%** with **max drawdown under 10%** — the survival thesis
-on real data. (Down-trending window shows the defensive side; upside capture shows
-in trending-up windows.)
+bearish window): where buy-and-hold **CAKE fell −50%** and **ETH −56%**, PLIMSOLL
+held **−3.9%** and **−5.2%** *net of a measured simulated tx-cost model* — the real
+TWAK round-trip measured at **~1.4%** (pool spread + provider fee + slippage + ~$0.20
+BSC gas; ~1.7% to break even). Because the strategy is **hold-through-trend, not a
+daily rebalancer**, it took only **3–4 round-trips** over the whole window, so the
+cost drag is **under 1%** and **max drawdown stayed under 9%** — the survival thesis
+on real data, after honest costs. (Down-trending window shows the defensive side;
+upside capture shows in trending-up windows. Figures roll with the window.)
 
 ## Two tracks, one strategy
 

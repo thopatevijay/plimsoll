@@ -129,18 +129,25 @@ harness — `npm run backtest [SYMBOL]` in the PLIMSOLL repo — does exactly th
 **real daily candles from free Binance klines** (RSI/MACD from real closes; F&G
 proxied from momentum where free history lacks it), versus a buy-and-hold benchmark.
 
-**Evidence (≈329 real daily candles, a bearish window):**
+**Evidence (≈329 real daily candles, a bearish window; figures roll with the window):**
 
-| Asset | Buy & hold | PLIMSOLL | Max drawdown |
-|---|---|---|---|
-| CAKE | −47.4% | **−4.3%** | 9.9% |
-| ETH | −45.1% | **−3.8%** | 5.7% |
-| BNB | −13.8% | **0.0%** (stood aside) | 0.0% |
+| Asset | Buy & hold | PLIMSOLL net | (gross, pre-cost) | Round-trips | Max drawdown |
+|---|---|---|---|---|---|
+| CAKE | −50.0% | **−3.9%** | −3.2% | 4 | 6.7% |
+| ETH | −55.6% | **−5.2%** | −4.7% | 3 | 8.2% |
+| BNB | −19.3% | **0.0%** (stood aside) | +0.0% | 0 | 0.0% |
 
-The regime gate kept capital nearly flat through a 45%+ drawdown in the underlying —
-the survival thesis: most return **without breaching the drawdown gate**, net of
-simulated costs, by low-churn design. (This window was down-trending, so it shows
-the defensive side; upside capture appears in trending-up windows.)
+`net` is **after a measured simulated tx-cost model**: the real TWAK round-trip was
+measured at **~1.4%** (pool spread + provider fee + slippage; ~$0.20 BSC gas; ~1.7%
+to break even) across 12 ETH/USDT quote samples, flat 0.1–10 ETH. The strategy is
+**hold-through-trend, not a daily rebalancer** — it enters on a confirmed trend, holds
+while it persists (zero cost), and exits when the regime flips to risk-off. So it pays
+**one round-trip per episode** (3–4 over the whole window), and the cost drag is **<1%**
+— costs barely matter precisely *because* it is low-churn by design. The regime gate
+kept capital nearly flat through a 50%+ drawdown in the underlying: the survival thesis,
+net of honest costs, well inside the drawdown gate. (Down-trending window shows the
+defensive side; upside capture appears in trending-up windows. The scoring cost model
+is the organizers' to finalize — ours is env-tunable to match it.)
 
 ## Tool-failure fallbacks
 

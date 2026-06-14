@@ -84,11 +84,12 @@
   "backtest": {
     "asset": "CAKE",
     "candles": 329,
-    "buyHoldPct": -47.4,
-    "strategyPct": -4.3,
-    "maxDdPct": 9.9,
-    "trades": 69,
-    "winRatePct": 43
+    "buyHoldPct": -50.0,
+    "strategyPct": -3.9,
+    "grossPct": -3.2,
+    "maxDdPct": 6.7,
+    "trades": 4,
+    "winRatePct": 25
   },
   "proof": {
     "swapTx": "0x4b94b94b9172708fd45bd600203e515d5228703be047d064194ddb4f014d3559",

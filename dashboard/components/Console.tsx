@@ -402,13 +402,15 @@ function Backtest({ snap }: { snap: Snapshot }) {
   return (
     <div className="flex flex-col gap-3">
       <div className="font-mono text-[10px] text-fog/70">
-        {b.candles} real daily candles · {b.asset}/USDT · {b.trades} trades · {b.winRatePct}% win
+        {b.candles} real daily candles · {b.asset}/USDT · {b.trades} round-trips · {b.winRatePct}% win
       </div>
       {bar(`buy & hold ${b.asset}`, b.buyHoldPct, "#E8635D")}
-      {bar("PLIMSOLL", b.strategyPct, "#B8FF3C")}
+      {bar("PLIMSOLL (net)", b.strategyPct, "#B8FF3C")}
       <div className="font-mono text-[10px] leading-relaxed text-fog/70">
-        max drawdown {b.maxDdPct}% — survived a {Math.abs(b.buyHoldPct).toFixed(0)}% market drop. Most return{" "}
-        <span className="text-signal">without blowing up.</span>
+        net of a measured ~1.4% TWAK round-trip cost (gross {b.grossPct >= 0 ? "+" : ""}
+        {b.grossPct.toFixed(1)}%). max drawdown {b.maxDdPct}% — survived a{" "}
+        {Math.abs(b.buyHoldPct).toFixed(0)}% market drop in just {b.trades} round-trips.{" "}
+        <span className="text-signal">Low-churn by design.</span>
       </div>
     </div>
   );

@@ -13,15 +13,17 @@ export const REFS = {
     setMetadataTx: "0x01ebdb614ff922b46fac6a0856d9a5b5732d5790488c0838611cafa645d4ab60",
     competeTx: "0xa7d3f9bc6324b2d482b8d1fa4832d93cf85173b801d9bbd34cff7e58ab7a0367",
   },
-  // Representative real-data backtest (`npm run backtest CAKE`, 329 daily candles) —
-  // historical evidence, not live state.
+  // Representative real-data backtest (`npm run backtest CAKE`, 329 daily candles,
+  // hold-through-trend, net of the measured ~1.4% TWAK round-trip cost) — historical
+  // evidence, not live state. Figures roll with the trailing window.
   backtest: {
     asset: "CAKE",
     candles: 329,
-    buyHoldPct: -47.4,
-    strategyPct: -4.3,
-    maxDdPct: 9.9,
-    trades: 69,
-    winRatePct: 43,
+    buyHoldPct: -50.0,
+    strategyPct: -3.9, // net of cost
+    grossPct: -3.2, // pre-cost
+    maxDdPct: 6.7,
+    trades: 4, // round-trips over the whole window — low-churn
+    winRatePct: 25,
   },
 } as const;
