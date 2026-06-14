@@ -1,4 +1,5 @@
 import { loadConstitution } from "../config.js";
+import { breakEvenReturnPct, costModelFromEnv } from "../costs/index.js";
 import { getRegimeWeight } from "../learning/index.js";
 import type { SignalBundle } from "../types.js";
 import { runBacktest, type BacktestStep } from "./index.js";
@@ -13,10 +14,16 @@ const START_EQUITY = 1000;
 
 function report(title: string, r: ReturnType<typeof runBacktest>, extra: () => void) {
   const ret = ((r.finalEquityUsd - r.startEquityUsd) / r.startEquityUsd) * 100;
+  // Net equity is already cost-charged; gross adds the cost back to show the drag.
+  const grossFinal = r.finalEquityUsd + r.totalCostUsd;
+  const grossRet = ((grossFinal - r.startEquityUsd) / r.startEquityUsd) * 100;
+  const costDragPct = (r.totalCostUsd / r.startEquityUsd) * 100;
   console.log(`\n📊 ${title}\n`);
   extra();
-  console.log(`  trades:         ${r.trades}  (win rate ${r.trades ? Math.round((r.wins / r.trades) * 100) : 0}%)`);
-  console.log(`  equity:         $${r.startEquityUsd} → $${r.finalEquityUsd.toFixed(2)}  (${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%)`);
+  console.log(`  trades:         ${r.trades}  (win rate ${r.trades ? Math.round((r.wins / r.trades) * 100) : 0}%, net of cost)`);
+  console.log(`  equity (net):   $${r.startEquityUsd} → $${r.finalEquityUsd.toFixed(2)}  (${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%)`);
+  console.log(`  tx-cost drag:   −$${r.totalCostUsd.toFixed(2)}  (${costDragPct.toFixed(2)}% of start) — gross would be ${grossRet >= 0 ? "+" : ""}${grossRet.toFixed(1)}%`);
+  console.log(`  break-even/trade: ${breakEvenReturnPct(r.startEquityUsd * (c.sizing.perTradeMaxPctOfEquity / 100), cost).toFixed(2)}% move needed at full per-trade size`);
   console.log(`  peak equity:    $${r.peakEquityUsd.toFixed(2)}`);
   console.log(`  max drawdown:   ${r.maxDrawdownPct.toFixed(1)}%  (DQ line ~30%)`);
   console.log("\n  learned regime weights (started at 1.00):");
@@ -28,12 +35,13 @@ function report(title: string, r: ReturnType<typeof runBacktest>, extra: () => v
 const symbol = (process.argv[2] ?? "CAKE").toUpperCase();
 const days = Number(process.argv[3] ?? 365);
 const c = loadConstitution();
+const cost = costModelFromEnv(); // conservative tx-cost model (env-tunable)
 
 try {
   const closes = await fetchDailyCloses(symbol, days);
   const steps = buildRealSteps(closes, symbol);
   if (steps.length < 30) throw new Error(`too few candles for ${symbol} (${steps.length})`);
-  const r = runBacktest(steps, c, START_EQUITY);
+  const r = runBacktest(steps, c, START_EQUITY, cost);
   const bh = buyHoldReturnPct(closes);
   report(`PLIMSOLL backtest — ${symbol}/USDT, ${steps.length} real daily candles (Binance)`, r, () => {
     console.log(`  benchmark:      buy & hold ${symbol} = ${bh >= 0 ? "+" : ""}${bh.toFixed(1)}% over the window`);
@@ -52,7 +60,7 @@ try {
     ...synth(3, RISK_OFF, 0, true),
     ...synth(4, TREND, 18, true),
   ];
-  const r = runBacktest(scenario, c, START_EQUITY);
+  const r = runBacktest(scenario, c, START_EQUITY, cost);
   report("PLIMSOLL backtest (synthetic, keyless)", r, () => {
     console.log(`  days:           ${scenario.length}  (risk-off days correctly skipped)`);
   });

@@ -37,5 +37,20 @@ describe("backtest harness (full loop, keyless)", () => {
     expect(r.trades).toBe(0);
     expect(r.finalEquityUsd).toBe(1000);
     expect(r.maxDrawdownPct).toBe(0);
+    expect(r.totalCostUsd).toBe(0); // no trades → no cost
+  });
+
+  it("charges a simulated tx cost on every trade (net < gross)", () => {
+    const r = runBacktest(steps(5, trending, 20, true), c, 1000);
+    expect(r.totalCostUsd).toBeGreaterThan(0);
+    // Net equity must be strictly below the cost-free gross (1000 + 5×20).
+    expect(r.finalEquityUsd).toBeLessThan(1000 + 5 * 20);
+    expect(r.finalEquityUsd).toBeCloseTo(1000 + 5 * 20 - r.totalCostUsd, 6);
+  });
+
+  it("a sub-cost edge loses money after fees (turns a thin winner negative)", () => {
+    // Gross +$1/trade is below the per-trade round-trip cost → net erosion.
+    const r = runBacktest(steps(10, trending, 1, true), c, 1000);
+    expect(r.finalEquityUsd).toBeLessThan(1000);
   });
 });

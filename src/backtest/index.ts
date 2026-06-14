@@ -1,4 +1,5 @@
 import { ruleProposer } from "../brain/rules.js";
+import { DEFAULT_COST_MODEL, roundTripCostUsd, type CostModel } from "../costs/index.js";
 import { evaluate } from "../kernel/index.js";
 import { applyWeights, initialWeights, learnFromOutcome } from "../learning/index.js";
 import type { ConfidenceWeights } from "../learning/index.js";
@@ -28,6 +29,8 @@ export interface BacktestResult {
   maxDrawdownPct: number;
   trades: number;
   wins: number;
+  /** Total simulated transaction cost charged across all trades (round-trip). */
+  totalCostUsd: number;
   weights: ConfidenceWeights;
 }
 
@@ -35,11 +38,13 @@ export function runBacktest(
   steps: BacktestStep[],
   c: Constitution,
   startEquityUsd: number,
+  costModel: CostModel = DEFAULT_COST_MODEL,
 ): BacktestResult {
   let portfolio = emptyPortfolio(startEquityUsd);
   let weights = initialWeights();
   let trades = 0;
   let wins = 0;
+  let totalCostUsd = 0;
   let maxDrawdownPct = 0;
 
   for (const step of steps) {
@@ -53,10 +58,16 @@ export function runBacktest(
       // flat synthetic figure. "sell" is an exit (no new long PnL); the rule
       // proposer only emits buy/hold, so approved trades are buys.
       const sign = decision.order.direction === "buy" ? 1 : -1;
-      const pnlUsd =
+      const grossPnlUsd =
         step.returnPctNext !== undefined
           ? decision.order.sizeUsd * step.returnPctNext * sign
           : (step.pnlUsd ?? 0);
+      // Charge the simulated round-trip cost (enter + exit). Net P&L is what the
+      // wallet actually keeps — and what the learning loop should grade against,
+      // so the agent learns that sub-cost "edges" are not worth taking.
+      const costUsd = roundTripCostUsd(decision.order.sizeUsd, costModel);
+      const pnlUsd = grossPnlUsd - costUsd;
+      totalCostUsd += costUsd;
       if (pnlUsd > 0) wins++;
 
       portfolio = applyFill(portfolio, {
@@ -64,7 +75,7 @@ export function runBacktest(
         filledAsset: decision.order.asset,
         filledUsd: decision.order.sizeUsd,
       });
-      portfolio = markEquity(portfolio, portfolio.equityUsd + pnlUsd); // realize P&L
+      portfolio = markEquity(portfolio, portfolio.equityUsd + pnlUsd); // realize net P&L
       weights = learnFromOutcome(weights, proposal.regime, {
         pnlUsd,
         thesisHeld: step.thesisHeld,
@@ -81,6 +92,7 @@ export function runBacktest(
     maxDrawdownPct,
     trades,
     wins,
+    totalCostUsd,
     weights,
   };
 }
