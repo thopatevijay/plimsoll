@@ -117,7 +117,9 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
       console.log(`        ${entry.exec.txHash}`);
       recordDailyTrade(decision.order.sizeUsd); // feed the kernel's daily-volume cap
       // Record the decision to be graded after the hold horizon (drives learning).
-      if (currentPrice !== undefined && currentPrice > 0) {
+      // Only BUYS open a learning position — a sell is an EXIT, not a new thesis to
+      // grade. (The matching buy was already recorded and is graded on its own clock.)
+      if (decision.order.direction === "buy" && currentPrice !== undefined && currentPrice > 0) {
         const open = loadPositions();
         open.push({
           id: entry.ts,

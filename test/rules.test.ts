@@ -17,8 +17,15 @@ describe("rule-based proposer", () => {
     expect(p.conviction).toBeGreaterThan(0);
   });
 
-  it("holds in risk-off", () => {
-    expect(ruleProposer(bundle({ fearGreed: 15 })).direction).toBe("hold");
+  it("flattens (sells) in risk-off — active sleeve goes flat", () => {
+    const p = ruleProposer(bundle({ fearGreed: 15 }));
+    expect(p.direction).toBe("sell");
+    expect(p.regime).toBe("risk_off");
+    expect(p.thesis).toMatch(/flatten|survival/i);
+  });
+
+  it("does not confirm a buy when RSI is below the momentum midline", () => {
+    expect(ruleProposer(bundle({ fearGreed: 65, fundingRate: 0.02, macd: 1, rsi: 45 })).direction).toBe("hold");
   });
 
   it("never buys a flagged honeypot", () => {

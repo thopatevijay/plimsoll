@@ -106,9 +106,38 @@ describe("risk kernel", () => {
     });
 
     it("lets a SELL through even when the token is a honeypot (you can always exit)", () => {
+      const held: PortfolioState = { ...healthy, positions: { CAKE: 200 } };
       const sell: Proposal = { ...buy("CAKE"), direction: "sell" };
-      const d = evaluate(sell, healthy, C, { isHoneypot: true, liquidityUsd: 1 });
+      const d = evaluate(sell, held, C, { isHoneypot: true, liquidityUsd: 1 });
       expect(d.ok).toBe(true);
+      if (d.ok) expect(d.order.sizeUsd).toBeCloseTo(200); // sized to the full held position
+    });
+  });
+
+  describe("exit path (sells de-risk and are always allowed)", () => {
+    const held = (usd: number): PortfolioState => ({ ...healthy, positions: { CAKE: usd } });
+    const sell = (asset = "CAKE"): Proposal => ({ ...buy(asset), direction: "sell" });
+
+    it("approves a sell sized to the full held position", () => {
+      const d = evaluate(sell(), held(250), C);
+      expect(d.ok).toBe(true);
+      if (d.ok) expect(d.order.sizeUsd).toBeCloseTo(250);
+    });
+
+    it("rejects a sell when nothing is held", () => {
+      const d = evaluate(sell(), healthy, C);
+      expect(d.ok).toBe(false);
+      if (!d.ok) expect(d.reason).toMatch(/no CAKE position/);
+    });
+
+    it("allows a protective exit PAST the drawdown kill-switch", () => {
+      const drawn: PortfolioState = { ...held(250), equityUsd: 790, peakEquityUsd: 1000 }; // 21% dd
+      expect(evaluate(sell(), drawn, C).ok).toBe(true); // buys blocked here, exits must not be
+    });
+
+    it("allows an exit in a risk-off regime and ignores the daily cap", () => {
+      const maxed: PortfolioState = { ...held(250), tradeVolumeTodayUsd: 400 };
+      expect(evaluate(sell(), maxed, C, { regime: "risk_off" }).ok).toBe(true);
     });
   });
 });

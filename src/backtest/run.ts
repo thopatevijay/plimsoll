@@ -20,7 +20,7 @@ function report(title: string, r: ReturnType<typeof runBacktest>, extra: () => v
   const costDragPct = (r.totalCostUsd / r.startEquityUsd) * 100;
   console.log(`\n📊 ${title}\n`);
   extra();
-  console.log(`  trades:         ${r.trades}  (win rate ${r.trades ? Math.round((r.wins / r.trades) * 100) : 0}%, net of cost)`);
+  console.log(`  round-trips:    ${r.trades}  (win rate ${r.trades ? Math.round((r.wins / r.trades) * 100) : 0}%, net of cost) — low-churn: hold-through-trend`);
   console.log(`  equity (net):   $${r.startEquityUsd} → $${r.finalEquityUsd.toFixed(2)}  (${ret >= 0 ? "+" : ""}${ret.toFixed(1)}%)`);
   console.log(`  tx-cost drag:   −$${r.totalCostUsd.toFixed(2)}  (${costDragPct.toFixed(2)}% of start) — gross would be ${grossRet >= 0 ? "+" : ""}${grossRet.toFixed(1)}%`);
   console.log(`  break-even/trade: ${breakEvenReturnPct(r.startEquityUsd * (c.sizing.perTradeMaxPctOfEquity / 100), cost).toFixed(2)}% move needed at full per-trade size`);

@@ -42,6 +42,26 @@ export function evaluate(
   // 1. Hold = no-op, trivially fine.
   if (proposal.direction === "hold") return { ok: false, reason: "proposal is hold" };
 
+  // 1b. EXIT PATH — a sell is de-risking and is ALWAYS allowed: it bypasses the
+  //     buy-only entry gates, the drawdown kill-switch, and the daily-volume cap
+  //     (you must be able to flatten in a crash or past the kill-switch). Sized to
+  //     the FULL held position — an exit closes the position, it doesn't open one.
+  if (proposal.direction === "sell") {
+    const heldUsd = portfolio.positions[proposal.asset] ?? 0;
+    if (!(heldUsd > 0)) {
+      return { ok: false, reason: `no ${proposal.asset} position to exit` };
+    }
+    return {
+      ok: true,
+      order: {
+        asset: proposal.asset,
+        direction: "sell",
+        sizeUsd: heldUsd,
+        maxSlippageBps: c.sizing.maxSlippageBps,
+      },
+    };
+  }
+
   // 2. Allowlist — trades outside the 148 eligible tokens do not count.
   if (!c.allowlist.symbols.includes(proposal.asset)) {
     return { ok: false, reason: `asset ${proposal.asset} not in allowlist` };
