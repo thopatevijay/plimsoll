@@ -62,7 +62,7 @@ setvar TWAK_WALLET_JSON_B64 "$WB64"
 
 echo
 echo "✓ variables set on '$SERVICE' (mode=$MODE)."
-echo "Next:"
-echo "  railway volume add -m /data -s $SERVICE     # persist learning + drawdown floor"
+echo "Next (service is linked, so volume add needs no -s):"
+echo "  railway volume add -m /data                 # persist learning + drawdown floor"
 echo "  railway up -s $SERVICE -d                   # build + deploy (Dockerfile)"
 echo "  railway service logs -s $SERVICE            # watch — expect REAL equity (~\$53), not \$1000 stub"
