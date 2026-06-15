@@ -10,6 +10,7 @@ import { loadPortfolioFromChain } from "./ops/state.js";
 import { recordDailyTrade } from "./ops/daily.js";
 import { alert } from "./ops/heartbeat.js";
 import { writeSnapshot } from "./ops/snapshot.js";
+import { maybeRunDailyQualifier } from "./ops/qualifier.js";
 import {
   computeOutcome,
   loadPositions,
@@ -144,6 +145,20 @@ async function runOnce(asset: string): Promise<LedgerEntry> {
 
   console.log(`[5/5] ledger   → appended`);
   append(entry);
+
+  // Daily-trade qualifier: if nothing has traded this UTC day (a quiet risk-off
+  // tape), fire one minimal stable↔stable swap so we never miss the ≥1-trade/day
+  // requirement. Best-effort — a failure here must never break the loop.
+  try {
+    const q = await maybeRunDailyQualifier(portfolio);
+    if (q) {
+      console.log(`[qualifier] daily min-trade satisfied — ${q.order.direction} $${q.order.sizeUsd} ${q.order.asset} (${q.txHash})`);
+      await alert("info", `${config.mode}: daily qualifier ${q.order.direction} ${q.order.asset} → ${q.txHash}`);
+    }
+  } catch (e) {
+    console.log(`[qualifier] failed (non-fatal): ${(e as Error).message}`);
+  }
+
   writeSnapshot(entry, portfolio, constitution); // emit dashboard state (best-effort)
   console.log(`\n✅ cycle complete — pipe flows end to end.`);
   return entry;
