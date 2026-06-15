@@ -11,6 +11,7 @@ import { recordDailyTrade } from "./ops/daily.js";
 import { alert } from "./ops/heartbeat.js";
 import { writeSnapshot } from "./ops/snapshot.js";
 import { maybeRunDailyQualifier } from "./ops/qualifier.js";
+import { startSnapshotServer } from "./ops/server.js";
 import {
   computeOutcome,
   loadPositions,
@@ -171,7 +172,8 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 // errors / a periodic heartbeat are pushed to Telegram (no-op if unconfigured).
 // The USER launches this in live mode (`npm run dev`); it trades autonomously.
 async function runContinuous(): Promise<void> {
-  const requested = (process.env.PLIMSOLL_WATCHLIST ?? "CAKE,ETH")
+  startSnapshotServer(); // expose the live snapshot for the dashboard (Railway domain)
+  const requested = (process.env.PLIMSOLL_WATCHLIST ?? "ETH,CAKE,DOGE,XRP,LINK,AVAX,UNI,INJ")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);

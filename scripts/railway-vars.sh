@@ -41,7 +41,7 @@ setvar() {  # setvar KEY VALUE   (value via stdin so it never lands in shell his
 # Non-secret config
 setvar PLIMSOLL_MODE "$MODE"
 setvar PLIMSOLL_STATE_DIR "/data"
-setvar PLIMSOLL_WATCHLIST "CAKE,ETH"
+setvar PLIMSOLL_WATCHLIST "ETH,CAKE,DOGE,XRP,LINK,AVAX,UNI,INJ"
 setvar PLIMSOLL_INTERVAL_MS "300000"
 setvar LLM_MODEL "claude-opus-4-8"
 
