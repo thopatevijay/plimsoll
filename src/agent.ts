@@ -210,6 +210,17 @@ async function runContinuous(): Promise<void> {
   }
 }
 
+// Graceful shutdown: a 24/7 host (Railway) sends SIGTERM on every redeploy. Exit 0
+// so it's a CLEAN stop, not a non-zero "crash" (otherwise every redeploy emails a
+// false crash alert — which would mask a real crash during the live week). State is
+// rebuilt from chain on the next boot, so exiting between/within cycles is safe.
+for (const sig of ["SIGTERM", "SIGINT"] as const) {
+  process.on(sig, () => {
+    console.log(`\n[shutdown] received ${sig} — stopping cleanly`);
+    process.exit(0);
+  });
+}
+
 // `npm run tracer` (single cycle) or `npm run dev` (continuous live-week runner).
 const once = process.argv.includes("--once");
 if (once) {
