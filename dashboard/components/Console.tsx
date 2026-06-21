@@ -196,8 +196,23 @@ function Equity({ snap }: { snap: Snapshot }) {
     <div className="flex flex-col gap-3">
       <div className="flex items-end justify-between">
         <Stat label="equity" value={fmtUsd(snap.portfolio.equityUsd)} sub={`peak ${fmtUsd(snap.portfolio.peakEquityUsd)}`} />
-        <Stat label="cycle" value={`#${snap.cycle}`} sub="every 5 min" />
+        <Stat label="cycle" value={`#${snap.cycle}`} sub="per cycle" />
       </div>
+      {snap.pnl && (
+        <div className="flex items-end justify-between border-t border-hair pt-3">
+          <Stat
+            label="invested"
+            value={fmtUsd(snap.pnl.startEquityUsd)}
+            sub={snap.pnl.windowStarted ? "window start" : "window opens Jun 22"}
+          />
+          <Stat
+            label="PnL"
+            value={`${snap.pnl.pnlUsd >= 0 ? "+" : "−"}$${Math.abs(snap.pnl.pnlUsd).toFixed(2)}`}
+            sub={`${snap.pnl.pnlPct >= 0 ? "+" : "−"}${Math.abs(snap.pnl.pnlPct).toFixed(2)}% · net of costs`}
+            accent={snap.pnl.pnlUsd >= 0 ? "#5DD39E" : "#E8635D"}
+          />
+        </div>
+      )}
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="h-16 w-full">
         <defs>
           <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">

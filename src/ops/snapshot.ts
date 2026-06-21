@@ -15,10 +15,52 @@ import type { Constitution, LedgerEntry, PortfolioState } from "../types.js";
 // across cycles so the dashboard shows a real, growing line.
 
 const SNAPSHOT_PATH = statePath("snapshot.json");
+const BASELINE_PATH = statePath("baseline.json");
 const CURVE_MAX = 48;
+// Trading window opens here; PnL is measured from the equity at/after this instant.
+const WINDOW_START_ISO = process.env.PLIMSOLL_WINDOW_START_ISO || "2026-06-22T00:00:00Z";
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const hhmmss = (iso: string) => (iso.length >= 19 ? iso.slice(11, 19) : iso);
+
+/** PnL vs the trading-window-start equity. The baseline is captured once — on the
+ *  first cycle at/after the window opens — and frozen in baseline.json, so PnL
+ *  reflects trading performance (not the pre-window funding/swaps). Before the
+ *  window opens, PnL reads 0 against the live equity. Never throws. */
+function pnlState(currentEquityUsd: number, nowIso: string) {
+  const windowStartIso = WINDOW_START_ISO;
+  const startMs = Date.parse(windowStartIso);
+  const nowMs = Date.parse(nowIso);
+  const provisional = {
+    startEquityUsd: round2(currentEquityUsd),
+    currentEquityUsd: round2(currentEquityUsd),
+    pnlUsd: 0,
+    pnlPct: 0,
+    windowStarted: false,
+    windowStartIso,
+  };
+  if (!Number.isFinite(startMs) || !Number.isFinite(nowMs) || nowMs < startMs) return provisional;
+
+  let startEquityUsd = currentEquityUsd;
+  try {
+    if (existsSync(BASELINE_PATH)) {
+      startEquityUsd = Number(JSON.parse(readFileSync(BASELINE_PATH, "utf8")).startEquityUsd) || currentEquityUsd;
+    } else {
+      atomicWriteJson(BASELINE_PATH, { startEquityUsd: currentEquityUsd, capturedAt: nowIso });
+    }
+  } catch {
+    /* baseline is cosmetic — fall back to current equity (PnL 0) */
+  }
+  const pnlUsd = currentEquityUsd - startEquityUsd;
+  return {
+    startEquityUsd: round2(startEquityUsd),
+    currentEquityUsd: round2(currentEquityUsd),
+    pnlUsd: round2(pnlUsd),
+    pnlPct: startEquityUsd > 0 ? round2((pnlUsd / startEquityUsd) * 100) : 0,
+    windowStarted: true,
+    windowStartIso,
+  };
+}
 
 function priorState(): { curve: { t: string; equity: number }[]; cycle: number } {
   try {
@@ -84,6 +126,7 @@ export function writeSnapshot(entry: LedgerEntry, portfolio: PortfolioState, c: 
         drawdownPct: round2(drawdownPct(portfolio)),
         equityCurve,
       },
+      pnl: pnlState(portfolio.equityUsd, entry.ts),
       learning: { trending: w.trending, chopping: w.chopping, risk_off: w.risk_off },
       guardrails: {
         allowlist: c.allowlist.symbols.length,

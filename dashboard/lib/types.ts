@@ -52,6 +52,15 @@ export interface Snapshot {
     drawdownPct: number;
     equityCurve: { t: string; equity: number }[];
   };
+  // Optional: present on live snapshots from the agent; absent on the bundled sample.
+  pnl?: {
+    startEquityUsd: number;
+    currentEquityUsd: number;
+    pnlUsd: number;
+    pnlPct: number;
+    windowStarted: boolean;
+    windowStartIso: string;
+  };
   learning: Record<Regime, number>;
   guardrails: {
     allowlist: number;
