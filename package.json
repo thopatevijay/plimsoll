@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "constitution": "tsx src/identity/commit.ts"
+    "constitution": "tsx src/identity/commit.ts",
+    "kernel-demo": "tsx src/demo/kernel-demo.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.102.0",

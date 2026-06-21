@@ -209,6 +209,7 @@ npm test                   # 164 unit tests (deterministic, offline)
 npm run typecheck          # strict TypeScript
 npm run tracer             # one decision cycle, end-to-end (real data, dry-run)
 npm run signals            # inspect the live signal bundle (CAKE)
+npm run kernel-demo        # see the risk kernel approve one trade and veto four
 npm run backtest [SYMBOL]  # replay the full loop on REAL Binance daily candles
 npm run constitution 129312 # verify the on-chain risk-rules hash matches local
 npm run dev                # the unattended runner (PLIMSOLL_MODE=live to trade)
