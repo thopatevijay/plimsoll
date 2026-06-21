@@ -1,5 +1,6 @@
 import { config } from "../config.js";
 import { resolveBscToken } from "../tokens/index.js";
+import { cachedTTL } from "../util/cache.js";
 import { mapFearGreed, mapQuotePrice } from "./cmc.js";
 import { fetchChainSignals, type ChainSignals } from "./chain.js";
 import { checkHoneypot } from "./honeypot.js";
@@ -37,10 +38,13 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
 
   if (!config.cmc.apiKey) return bundle; // keyless → hollow bundle; rule engine still runs
 
+  // Market-wide REST F&G is only a fallback for the MCP value — cache it so it isn't
+  // re-fetched every cycle/asset (same TTL rationale as the MCP globals).
+  const GLOBALS_TTL_MS = Number(process.env.CMC_GLOBALS_TTL_MS) || 15 * 60 * 1000;
   const [restFearGreed, mcp] = await Promise.all([
-    cmcGet("/v3/fear-and-greed/latest", {})
-      .then(mapFearGreed)
-      .catch(() => undefined), // REST F&G is just a fallback for MCP
+    cachedTTL("cmc:rest:feargreed", GLOBALS_TTL_MS, () =>
+      cmcGet("/v3/fear-and-greed/latest", {}).then(mapFearGreed),
+    ).catch(() => undefined), // REST F&G is just a fallback for MCP
     fetchMcpSignals(asset).catch((e): McpSignals => {
       console.warn(`  ⚠️  MCP signals failed: ${(e as Error).message}`);
       return {};
@@ -82,9 +86,11 @@ export async function fetchSignalBundle(asset: string): Promise<SignalBundle> {
   // PancakeSwap pair directly via RPC; undefined = unverified (caller won't block).
   try {
     const [bnbPrice, assetAddr] = await Promise.all([
-      cmcGet("/v2/cryptocurrency/quotes/latest", { symbol: "BNB" })
-        .then((r) => mapQuotePrice(r, "BNB"))
-        .catch(() => undefined),
+      // BNB price is only used to value pool liquidity in USD — market-wide and
+      // slow-moving, so cache it rather than fetch every cycle/asset.
+      cachedTTL("cmc:price:BNB", GLOBALS_TTL_MS, () =>
+        cmcGet("/v2/cryptocurrency/quotes/latest", { symbol: "BNB" }).then((r) => mapQuotePrice(r, "BNB")),
+      ).catch(() => undefined),
       resolveBscToken(asset).catch(() => undefined),
     ]);
     if (assetAddr?.startsWith("0x")) {
