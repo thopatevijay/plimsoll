@@ -1,12 +1,46 @@
-# PLIMSOLL
+<p align="center">
+  <img src="brand/plimsoll-banner.png" alt="PLIMSOLL — the autonomous on-chain trading agent you can actually let run" width="820">
+</p>
 
-**An autonomous BNB-Chain trading agent you can actually let run.** It reads the
-chain natively, pays its own way for data via x402, learns from every trade —
-and a deterministic risk kernel keeps it inside the rules you set: no out-of-policy
-order is ever constructed or signed. Running unattended 24/7 on BNB Chain.
+<p align="center">
+  <b>An autonomous BNB-Chain trading agent you can actually let run</b> — it reads the chain natively, pays its own way for data via x402,<br>
+  learns from every trade, and a deterministic risk kernel keeps it inside the rules you set: <b>it physically can't cross the risk line.</b>
+</p>
 
-> Built for **BNB Hack: AI Trading Agent Edition** — CoinMarketCap × Trust Wallet × BNB Chain.
-> Tracks: **1 — Autonomous Trading Agents** · **2 — Strategy Skills**.
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=mv6soQYHHSE"><b>▶&nbsp;Demo&nbsp;video</b></a> &nbsp;·&nbsp;
+  <a href="https://plimsoll-agent.vercel.app"><b>🖥&nbsp;Live&nbsp;dashboard</b></a> &nbsp;·&nbsp;
+  <a href="https://bscscan.com/address/0xB848C0315997B683F702fd877Ce220293CFda1e5"><b>⛓&nbsp;Agent&nbsp;on&nbsp;BscScan</b></a> &nbsp;·&nbsp;
+  <a href="skills/plimsoll-strategy/SKILL.md"><b>📐&nbsp;Track-2&nbsp;Skill</b></a>
+</p>
+
+<p align="center">
+  <sub>Built for <b>BNB Hack: AI Trading Agent Edition</b> · CoinMarketCap × Trust Wallet × BNB Chain · Tracks <b>1</b> (Autonomous Trading) + <b>2</b> (Strategy Skills)</sub>
+</p>
+
+---
+
+## 🧭 For judges — everything in one place
+
+| | |
+|---|---|
+| **▶ Demo video** | https://www.youtube.com/watch?v=mv6soQYHHSE |
+| **🖥 Live dashboard** | https://plimsoll-agent.vercel.app |
+| **📦 Repo** | https://github.com/thopatevijay/plimsoll |
+| **🎯 Tracks** | **1** — Autonomous Trading Agents · **2** — Strategy Skills ([`skills/plimsoll-strategy/SKILL.md`](skills/plimsoll-strategy/SKILL.md)) |
+| **🔑 Agent wallet (BSC)** | [`0xB848C0315997B683F702fd877Ce220293CFda1e5`](https://bscscan.com/address/0xB848C0315997B683F702fd877Ce220293CFda1e5) |
+| **🪪 ERC-8004 identity** | agentId **`129312`** · registry [`0x8004a169…a432`](https://bscscan.com/address/0x8004a169fb4a3325136eb29fa0ceb6d2e539a432) (owner = agent wallet) |
+| **📜 Risk-constitution hash** | `0x7c0af11bda62efaea35892ee53bc6ee926fff1a15b404564183a253b582c152e` — verify with `npm run constitution 129312` |
+
+### On-chain proof (BNB Smart Chain)
+
+| Event | Transaction |
+|---|---|
+| Self-custodial swap (Trust Wallet Agent Kit / 0x) | [`0xf24bc1ca…7539fd1`](https://bscscan.com/tx/0xf24bc1ca67f50d6eec42c370125d8bcde064b9d96d2121e92038ef8b77539fd1) |
+| x402 data payment (0.01 USDC → CMC facilitator) | [`0x045e2e38…d45cbae`](https://bscscan.com/tx/0x045e2e38f7836256d8c180b18f2fcd27faf4c71a87bb79392e95e7861d45cbae) |
+| ERC-8004 register | [`0xcf4076c5…b9390af`](https://bscscan.com/tx/0xcf4076c59355d685923a1a3c0d7301626258d515a50a6f12bb3481abab9390af) |
+| Constitution-hash commit (set-metadata) | [`0x01ebdb61…45d4ab60`](https://bscscan.com/tx/0x01ebdb614ff922b46fac6a0856d9a5b5732d5790488c0838611cafa645d4ab60) |
+| Competition registration | [`0xa7d3f9bc…b7a0367`](https://bscscan.com/tx/0xa7d3f9bc6324b2d482b8d1fa4832d93cf85173b801d9bbd34cff7e58ab7a0367) |
 
 ---
 
@@ -186,7 +220,7 @@ an inspectable, **backtestable CMC Skill** (Track 2 —
 
 ## Demo
 
-📹 *[demo video link]* — pain → live signals → an on-chain x402 data payment →
+📹 **[Watch the demo →](https://www.youtube.com/watch?v=mv6soQYHHSE)** — pain → live signals → an on-chain x402 data payment →
 the kernel guarding a trade → a self-custodial swap on BSC → the agent learning
 from a loss in real time.
 
@@ -198,7 +232,7 @@ thesis, equity vs the kill-switch, all 8 signal families, the skill-vs-luck lear
 the committed risk constitution, and live on-chain proof.
 
 On-chain proof (BNB Smart Chain): a live x402 payment + a self-custodial swap via
-the Trust Wallet Agent Kit. *(tx hashes in the submission.)*
+the Trust Wallet Agent Kit — all tx hashes are in the [proof table at the top](#on-chain-proof-bnb-smart-chain).
 
 ## Run it
 

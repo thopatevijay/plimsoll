@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="PLIMSOLL">
+  <rect width="120" height="120" rx="26" fill="#0A0D0C"/>
+  <defs><clipPath id="d"><circle cx="60" cy="62" r="34"/></clipPath></defs>
+  <rect x="26" y="62" width="68" height="34" fill="#B8FF3C" opacity="0.18" clip-path="url(#d)"/>
+  <circle cx="60" cy="62" r="34" fill="none" stroke="#E9EFEA" stroke-width="4"/>
+  <line x1="16" y1="62" x2="104" y2="62" stroke="#B8FF3C" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="60" cy="62" r="5" fill="#B8FF3C"/>
+</svg>
