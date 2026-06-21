@@ -35,9 +35,9 @@
   <text x="127.5" y="142" text-anchor="middle" class="ext" fill="#1D4ED8">CoinMarketCap</text>
   <text x="127.5" y="163" text-anchor="middle" class="extsub">live market &amp; on-chain data</text>
 
-  <!-- OpenAI -->
+  <!-- Claude -->
   <rect x="256" y="110" width="175" height="72" rx="14" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2" filter="url(#shadow)"/>
-  <text x="343.5" y="142" text-anchor="middle" class="ext" fill="#6D28D9">OpenAI</text>
+  <text x="343.5" y="142" text-anchor="middle" class="ext" fill="#6D28D9">Claude</text>
   <text x="343.5" y="163" text-anchor="middle" class="extsub">the AI model (the “brain”)</text>
 
   <!-- input arrows down -->

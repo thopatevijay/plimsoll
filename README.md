@@ -2,8 +2,8 @@
 
 **An autonomous BNB-Chain trading agent you can actually let run.** It reads the
 chain natively, pays its own way for data via x402, learns from every trade —
-and a deterministic risk kernel keeps it inside the rules you set, so it
-*physically can't* breach your limits.
+and a deterministic risk kernel keeps it inside the rules you set: no out-of-policy
+order is ever constructed or signed. Running unattended 24/7 on BNB Chain.
 
 > Built for **BNB Hack: AI Trading Agent Edition** — CoinMarketCap × Trust Wallet × BNB Chain.
 > Tracks: **1 — Autonomous Trading Agents** · **2 — Strategy Skills**.
@@ -159,10 +159,14 @@ cannot argue its way past any of these — they're a pure function.
 
 A **survival core** (low-vol, carries the daily-qualifier trade) bounds drawdown;
 an **active sleeve** takes regime-gated momentum trades only when funding,
-sentiment, and technicals confirm — and goes flat in risk-off. A hard drawdown
-kill-switch is the floor. The goal: most return *without blowing up*, net of
-costs, by design (low-churn). The agent then learns which regimes have actually
-worked for it and adjusts conviction accordingly.
+sentiment, and technicals confirm. In risk-off the kernel **deterministically
+flattens the sleeve** — it force-sells any held position regardless of what the
+LLM proposes, so "go flat in a downturn" is a property of the code, not a hope the
+model behaves. A hard drawdown kill-switch is the floor; a daily-qualifier
+USDC↔USDT swap guarantees the ≥1-trade/day rule at near-zero cost on quiet days.
+The goal: most return *without blowing up*, net of costs, by design (low-churn).
+The agent then learns which regimes have actually worked for it and adjusts
+conviction accordingly.
 
 **Backtest evidence** (`npm run backtest`, ~329 real daily candles from Binance, a
 bearish window): where buy-and-hold **CAKE fell −50%** and **ETH −56%**, PLIMSOLL
@@ -186,11 +190,12 @@ an inspectable, **backtestable CMC Skill** (Track 2 —
 the kernel guarding a trade → a self-custodial swap on BSC → the agent learning
 from a loss in real time.
 
-🖥️ **Live console** — *[dashboard link]* — the agent emits a state snapshot every
-cycle; [`dashboard/`](dashboard/) renders it: the decision pipeline (with the
-kernel visibly approving/vetoing), the LLM's falsifiable thesis, equity vs the
-kill-switch, all 8 signal families, the skill-vs-luck learning, the committed risk
-constitution, and live on-chain proof. `cd dashboard && npm run dev`.
+🖥️ **Live console** — **https://plimsoll-agent.vercel.app** — the running agent
+serves a fresh state snapshot every cycle over HTTP; the dashboard
+([`dashboard/`](dashboard/), on Vercel) fetches it per request and renders: the
+decision pipeline (with the kernel visibly approving/vetoing), the LLM's falsifiable
+thesis, equity vs the kill-switch, all 8 signal families, the skill-vs-luck learning,
+the committed risk constitution, and live on-chain proof.
 
 On-chain proof (BNB Smart Chain): a live x402 payment + a self-custodial swap via
 the Trust Wallet Agent Kit. *(tx hashes in the submission.)*
@@ -199,8 +204,8 @@ the Trust Wallet Agent Kit. *(tx hashes in the submission.)*
 
 ```bash
 npm install
-cp .env.example .env       # CMC key (free tier), OpenAI key, TWAK creds, BSC RPC
-npm test                   # 114 unit tests (deterministic, offline)
+cp .env.example .env       # CMC key (free tier), Claude (Anthropic) key, TWAK creds, BSC RPC
+npm test                   # 164 unit tests (deterministic, offline)
 npm run typecheck          # strict TypeScript
 npm run tracer             # one decision cycle, end-to-end (real data, dry-run)
 npm run signals            # inspect the live signal bundle (CAKE)
@@ -216,7 +221,7 @@ on-chain quotes, **no signing**. `live` = real swaps + x402 (funded wallet).
 
 `src/signals` (CMC + chain-native + x402) · `src/brain` (Claude + rule fallback) ·
 `src/kernel` (deterministic risk) · `src/exec` (Trust Wallet Agent Kit) ·
-`src/ops` (restart-state, heartbeat, daily caps, snapshot) · `src/learning` ·
+`src/ops` (restart-state, heartbeat, daily caps, snapshot, daily-qualifier, live snapshot server) · `src/learning` ·
 `src/ledger` · `src/identity` (ERC-8004 + constitution commit) · `src/backtest`
 (real Binance klines) · `agent.ts` · `dashboard/` (Next.js live console).
 
