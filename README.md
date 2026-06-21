@@ -20,7 +20,7 @@
 
 ---
 
-## 🧭 For judges — everything in one place
+## 🧭 Quick reference — everything in one place
 
 | | |
 |---|---|
@@ -177,17 +177,18 @@ the active sleeve goes flat → `HOLD`. A buy of a token with a $20k pool → ve
 at check #3. A drawdown of 21% → kill-switch trips, all buys refused. The LLM
 cannot argue its way past any of these — they're a pure function.
 
-## Built on the sponsor stack (each load-bearing)
+## Sponsor stack — what we integrated
 
-- **Trust Wallet Agent Kit** — the *sole* self-custodial execution layer, used
-  across multiple surfaces: spot swaps, native **x402** data payments, and the
-  daily-qualifier automation. Keys and signing authority stay local end to end.
-- **CoinMarketCap Agent Hub** — drives every decision: signals via **MCP**
-  (funding, sentiment, technicals), paid per-call via **x402**, and the strategy
-  is also published as a **CMC Skill** (`skills/plimsoll-strategy/SKILL.md`).
-- **BNB Chain / ERC-8004** — the agent registers an on-chain identity and
-  **commits a hash of its risk constitution**, so the rules it promised to follow
-  are publicly verifiable.
+Every sponsor tool is load-bearing, not decorative:
+
+| Sponsor | Tools / SDKs integrated | How PLIMSOLL uses it |
+|---|---|---|
+| **Trust Wallet Agent Kit** | TWAK CLI — `twak swap`, `twak x402 request`, `twak erc8004 register`, `twak compete register`, `twak automate` | The **sole self-custodial execution layer**. Signs every spot swap locally (keys never leave the machine), pays for data via native **x402**, registers the ERC-8004 identity + constitution hash, registers for the competition, and runs the daily-qualifier swap. |
+| **CoinMarketCap Agent Hub** | **8 signal tools over MCP** (`@modelcontextprotocol/sdk`), paid per-call via **x402** · published **CMC Skill** | Drives every decision — funding · Fear & Greed · technicals (RSI/MACD) · price · news · trending narratives · macro events · market-wide RSI. The same strategy ships as a backtestable Skill ([`skills/plimsoll-strategy/SKILL.md`](skills/plimsoll-strategy/SKILL.md)) — Track 2. |
+| **BNB Chain** | `viem` + keyed BSC RPC · PancakeSwap pair reads · BSC mainnet | Reads **on-chain DEX liquidity + buy/sell flow** straight from the PancakeSwap pair (`Swap` events via `eth_getLogs`) as a deterministic safety gate. Every swap, x402 payment, and the identity live on BSC mainnet. |
+| **ERC-8004** *(BNB AI Agent SDK standard)* | Canonical registry [`0x8004a169…a432`](https://bscscan.com/address/0x8004a169fb4a3325136eb29fa0ceb6d2e539a432) | Registers an **on-chain identity** (agentId `129312`) and **commits a sha256 hash of its risk constitution** — the rules it promises to follow are publicly verifiable (`npm run constitution 129312`). |
+
+**Core stack:** TypeScript · Node (`tsx`) · **Claude Opus 4.8** (`@anthropic-ai/sdk`, the proposer) · `viem` (BSC reads) · `zod` (schema validation) · Vitest (~164 tests) · Next.js + Tailwind (dashboard) · Docker on Railway (agent) + Vercel (dashboard).
 
 ## The strategy — regime-gated momentum barbell
 
