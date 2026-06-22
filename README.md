@@ -63,6 +63,9 @@ PLIMSOLL is built to be *run*, not just trusted:
 - **Learns from every trade** — each decision is graded after a holding window,
   separating **skill from luck** (did the regime hold, not just the PnL?), and
   the agent adapts its confidence where it's been right or wrong.
+- **Unattended, not blind** — runs 24/7 on a cloud box, rebuilds its state from
+  chain on every restart, and **pings Telegram on every trade, error, and a periodic
+  heartbeat** — so you can actually walk away and still know what it's doing.
 - **Safe by construction** — the AI only *proposes*. A pure, deterministic **risk
   kernel** sizes every trade and enforces a token allowlist, per-trade/daily
   caps, slippage limits, a **hard drawdown kill-switch**, a DEX-liquidity
